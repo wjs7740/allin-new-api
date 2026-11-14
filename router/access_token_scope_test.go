@@ -21,6 +21,21 @@ import (
 // accessTokenExemptRoutes are /api routes that never reach dashboard
 // authentication, so a personal access token has no rule to satisfy there.
 var accessTokenExemptRoutes = []string{
+	// Media API keys, not dashboard personal access tokens.
+	"GET /api/pricing_new",
+	"GET /api/aigc-assets/groups",
+	"POST /api/aigc-assets/groups",
+	"GET /api/aigc-assets/groups/:id",
+	"PUT /api/aigc-assets/groups/:id",
+	"DELETE /api/aigc-assets/groups/:id",
+	"GET /api/aigc-assets/assets",
+	"POST /api/aigc-assets/assets",
+	"GET /api/aigc-assets/assets/:id",
+	"PUT /api/aigc-assets/assets/:id",
+	"DELETE /api/aigc-assets/assets/:id",
+	"GET /api/aigc-assets/assets/:id/preview",
+	"POST /api/aigc-assets/uploads",
+	"POST /api/aigc-assets/uploads/:id/complete",
 	// Anonymous pages and setup.
 	"GET /api/setup",
 	"POST /api/setup",

@@ -163,7 +163,8 @@ func TestBuiltInTaskPluginResponsesAndUsageContracts(t *testing.T) {
 	}
 	// Every other directory holds a request processing plugin, which has no
 	// task part.
-	allKeys := slices.Concat(expectedKeys, slices.Collect(maps.Keys(requestPluginHooks)))
+	// Zhiqi's Responses API is a provider relay, while media uses its task part.
+	allKeys := slices.Concat(expectedKeys, slices.Collect(maps.Keys(requestPluginHooks)), []string{"zhiqi"})
 	slices.Sort(allKeys)
 	assert.Equal(t, allKeys, actualKeys)
 

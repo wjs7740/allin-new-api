@@ -265,6 +265,17 @@ func taskModelName(task *model.Task) string {
 // 当异步任务失败时，退还资金与令牌额度，并回减用户和渠道用量。
 // 返回资金来源是否已成功退还；失败时保留 quota，供显式重试或人工对账。
 func RefundTaskQuota(ctx context.Context, task *model.Task, reason string) bool {
+	if task.Platform == "zhiqi" {
+		var body struct {
+			Error struct {
+				Code string `json:"code"`
+			} `json:"error"`
+		}
+		if common.Unmarshal(task.Data, &body) == nil && (body.Error.Code == "media_storage_failed" || body.Error.Code == "media_storage_unavailable") {
+			// Generation was consumed; a delivery error does not refund it.
+			return true
+		}
+	}
 	quota := task.Quota
 	if quota == 0 {
 		return true

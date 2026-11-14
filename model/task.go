@@ -278,6 +278,9 @@ func InitTask(platform constant.TaskPlatform, relayInfo *commonRelay.RelayInfo) 
 			privateData.Key = relayInfo.ChannelMeta.ApiKey
 		}
 		if relayInfo.ChannelMeta.ChannelType == constant.ChannelTypeTaskPlugin {
+			if relayInfo.ChannelSetting.TaskPluginKey == "zhiqi" {
+				privateData.Key = relayInfo.ChannelMeta.ApiKey
+			}
 			if credential, ok := jsplugin.ParseCredential(relayInfo.ChannelMeta.ApiKey); ok {
 				privateData.CredentialAccount = credential.AccountID
 			}
@@ -399,6 +402,7 @@ func TaskGetAllTasks(startIdx int, num int, queryParams SyncTaskQueryParams) []*
 func GetTimedOutUnfinishedTasks(cutoffUnix int64, limit int) []*Task {
 	var tasks []*Task
 	err := DB.Where("progress != ?", "100%").
+		Where("platform <> ?", "zhiqi").
 		Where("status NOT IN ?", []string{TaskStatusFailure, TaskStatusSuccess}).
 		Where("submit_time < ?", cutoffUnix).
 		Order("submit_time").
@@ -414,7 +418,8 @@ func GetAllUnFinishSyncTasks(limit int) []*Task {
 	var tasks []*Task
 	var err error
 	// get all tasks progress is not 100%
-	err = DB.Where("progress != ?", "100%").Where("status != ?", TaskStatusFailure).Where("status != ?", TaskStatusSuccess).Limit(limit).Order("id").Find(&tasks).Error
+	err = DB.Where("progress != ?", "100%").Where("status != ?", TaskStatusFailure).Where("status != ?", TaskStatusSuccess).
+		Where("platform <> ? OR status <> ?", "zhiqi", TaskStatusUnknown).Limit(limit).Order("id").Find(&tasks).Error
 	if err != nil {
 		return nil
 	}

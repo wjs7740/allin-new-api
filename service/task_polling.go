@@ -112,6 +112,11 @@ func sweepTimedOutTasks(ctx context.Context) {
 	timedOutCount := 0
 
 	for _, task := range tasks {
+		if task.Platform == "zhiqi" {
+			// Losing contact with the merchant is not evidence of a failed
+			// generation. Keep its charge and task available for reconciliation.
+			continue
+		}
 		isLegacy := task.SubmitTime > 0 && task.SubmitTime < model.TaskRefundLegacyCutoff
 
 		oldStatus := task.Status
@@ -171,11 +176,15 @@ func RunTaskPollingOnce(ctx context.Context, report func(processed, total int)) 
 	}
 
 	common.SysLog(common.LogText("task progress polling started"))
+	RunZhiqiSubmissionQueue(ctx)
 	sweepTimedOutTasks(ctx)
 	allTasks := model.GetAllUnFinishSyncTasks(constant.TaskQueryLimit)
 	summary.UnfinishedTasks = len(allTasks)
 	platformTask := make(map[constant.TaskPlatform][]*model.Task)
 	for _, t := range allTasks {
+		if t.Platform == "zhiqi" && t.PrivateData.UpstreamTaskID == "" {
+			continue // Persisted submit intent with an uncertain upstream outcome.
+		}
 		platformTask[t.Platform] = append(platformTask[t.Platform], t)
 	}
 
@@ -873,7 +882,7 @@ func recordPollFailure(ctx context.Context, adaptor TaskPollingAdaptor, task *mo
 		// class, the status and what the plugin could not interpret.
 		logger.LogWarn(ctx, common.LogText("task %s poll %s (failures=%d, http=%d): %s", task.TaskID, class, task.PrivateData.PollFailures, statusCode, detail))
 	}
-	if giveUp {
+	if giveUp && task.Platform != "zhiqi" {
 		return failTaskFromPoll(ctx, adaptor, task, fromStatus, "Failed to query the upstream task status")
 	}
 	if _, err := task.UpdateWithStatus(fromStatus); err != nil {
@@ -896,6 +905,9 @@ func recordPollFailureForTasks(ctx context.Context, adaptor TaskPollingAdaptor, 
 }
 
 func failTaskFromPoll(ctx context.Context, adaptor TaskPollingAdaptor, task *model.Task, fromStatus model.TaskStatus, reason string) error {
+	if task.Platform == "zhiqi" {
+		return recordPollFailure(ctx, adaptor, task, fromStatus, pollClassNotFound, 404, reason)
+	}
 	now := time.Now().Unix()
 	task.Status = model.TaskStatusFailure
 	task.Progress = taskcommon.ProgressComplete

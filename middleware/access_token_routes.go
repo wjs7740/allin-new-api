@@ -41,6 +41,23 @@ func accessTokenScopeRule(scope string) accessTokenRouteRule {
 // Casbin-guarded routes declare themselves through
 // DeclareAccessTokenPermissionRoute when they are registered.
 var accessTokenRouteRules = map[string]accessTokenRouteRule{
+	"POST /api/zhiqi/tasks/reconcile":             accessTokenSessionRule,
+	"GET /api/zhiqi/configuration":                accessTokenSessionRule,
+	"PUT /api/zhiqi/configuration":                accessTokenSessionRule,
+	"POST /api/zhiqi/catalog/preview":             accessTokenSessionRule,
+	"GET /api/zhiqi-assets/groups":                accessTokenSessionRule,
+	"POST /api/zhiqi-assets/groups":               accessTokenSessionRule,
+	"GET /api/zhiqi-assets/groups/:id":            accessTokenSessionRule,
+	"PUT /api/zhiqi-assets/groups/:id":            accessTokenSessionRule,
+	"DELETE /api/zhiqi-assets/groups/:id":         accessTokenSessionRule,
+	"GET /api/zhiqi-assets/assets":                accessTokenSessionRule,
+	"POST /api/zhiqi-assets/assets":               accessTokenSessionRule,
+	"GET /api/zhiqi-assets/assets/:id":            accessTokenSessionRule,
+	"PUT /api/zhiqi-assets/assets/:id":            accessTokenSessionRule,
+	"DELETE /api/zhiqi-assets/assets/:id":         accessTokenSessionRule,
+	"GET /api/zhiqi-assets/assets/:id/preview":    accessTokenSessionRule,
+	"POST /api/zhiqi-assets/uploads":              accessTokenSessionRule,
+	"POST /api/zhiqi-assets/uploads/:id/complete": accessTokenSessionRule,
 	// router/api-router.go: top level
 	"GET /api/models":                     accessTokenScopeRule("profile:read"),
 	"GET /api/status/test":                accessTokenScopeRule("log:read"),

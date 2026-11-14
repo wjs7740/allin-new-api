@@ -379,6 +379,16 @@ func RelayTaskSubmit(c *gin.Context, info *relaycommon.RelayInfo) (*TaskSubmitRe
 	}
 
 	// 9. 发送请求
+	if platform == "zhiqi" {
+		payload, err := io.ReadAll(io.LimitReader(requestBody, (1<<20)+1))
+		if err != nil || len(payload) > 1<<20 {
+			return nil, service.TaskErrorWrapperLocal(errors.New("media request exceeds 1 MiB"), "invalid_media_request", http.StatusBadRequest)
+		}
+		if err := prepareZhiqiSubmission(c, info, string(payload)); err != nil {
+			return nil, service.TaskErrorWrapperLocal(err, "task_intent_persistence_failed", http.StatusServiceUnavailable)
+		}
+		return queuedZhiqiSubmission(c, info), nil
+	}
 	resp, err := adaptor.DoRequest(c, info, requestBody)
 	if err != nil {
 		return nil, service.TaskErrorWrapper(err, "do_request_failed", http.StatusInternalServerError, common.UpstreamAddresses(c)...)

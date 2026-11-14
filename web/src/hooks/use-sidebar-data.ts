@@ -106,6 +106,11 @@ export function useSidebarData(badges: SidebarBadges = {}): SidebarData {
             configUrls: ['/usage-logs/drawing', '/usage-logs/task'],
             icon: ListTodo,
           },
+          {
+            title: t('Media platform'),
+            url: '/media',
+            icon: Box,
+          },
         ],
       },
       {

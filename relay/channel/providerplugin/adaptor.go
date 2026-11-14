@@ -86,6 +86,80 @@ func (a *Adaptor) Init(info *relaycommon.RelayInfo) {
 	}
 }
 
+// Zhiqi's synchronous image API has additional public fields such as
+// resolution and aspect_ratio. Preserve them while retaining model mapping
+// and the host's outbound image-count validation.
+func (a *Adaptor) ConvertImageRequest(c *gin.Context, info *relaycommon.RelayInfo, request dto.ImageRequest) (any, error) {
+	if info.ChannelSetting.TaskPluginKey != "zhiqi" {
+		return a.Adaptor.ConvertImageRequest(c, info, request)
+	}
+	if strings.Contains(c.GetHeader("Content-Type"), "multipart/form-data") {
+		form, err := common.ParseMultipartFormReusable(c)
+		if err != nil {
+			return nil, err
+		}
+		defer form.RemoveAll()
+		if len(form.File) > 0 {
+			return nil, errors.New("Zhiqi image edits require HTTP(S) image URLs")
+		}
+		var output bytes.Buffer
+		writer := multipart.NewWriter(&output)
+		if err = writer.WriteField("model", request.Model); err != nil {
+			return nil, err
+		}
+		hasImage := false
+		for name, values := range form.Value {
+			if name == "model" {
+				continue
+			}
+			isImage := name == "image" || name == "image[]"
+			if len(values) > 1 && !isImage {
+				return nil, fmt.Errorf("%s must be provided once", name)
+			}
+			for _, value := range values {
+				if isImage || name == "mask" {
+					parsed, parseErr := url.Parse(value)
+					if parseErr != nil || parsed.Host == "" || parsed.User != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") {
+						return nil, errors.New("image and mask require HTTP(S) URLs")
+					}
+					if isImage {
+						hasImage = true
+					}
+				}
+				field := name
+				if isImage {
+					field = "image"
+				}
+				if err = writer.WriteField(field, value); err != nil {
+					return nil, err
+				}
+			}
+		}
+		if !hasImage {
+			return nil, errors.New("image is required")
+		}
+		if err = writer.Close(); err != nil {
+			return nil, err
+		}
+		c.Request.Header.Set("Content-Type", writer.FormDataContentType())
+		return &output, nil
+	}
+	storage, err := common.GetBodyStorage(c)
+	if err != nil {
+		return nil, err
+	}
+	raw, err := storage.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	var body map[string]any
+	if err = common.Unmarshal(raw, &body); err != nil || body == nil {
+		return nil, errors.New("image request must be a JSON object")
+	}
+	body["model"] = request.Model
+	return body, nil
+}
+
 func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 	requestURL, err := a.Adaptor.GetRequestURL(info)
 	if err != nil || a.credential == nil || len(a.credential.Query) == 0 {

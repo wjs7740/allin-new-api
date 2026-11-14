@@ -28,6 +28,12 @@ func BuildTaskPluginView(task *model.Task) (dto.TaskView, error) {
 			return dto.TaskView{}, err
 		}
 		view.Data = replacePrivateTaskID(view.Data, task.PrivateData.UpstreamTaskID, task.TaskID)
+		if task.Platform == "zhiqi" {
+			if data, ok := view.Data.(map[string]any); ok {
+				data["model"] = task.Properties.OriginModelName
+				data["object"] = task.Action + ".task"
+			}
+		}
 	}
 	return view, nil
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -567,8 +568,15 @@ func RelayTask(c *gin.Context) {
 	}
 
 	var outcome *taskSubmissionOutcome
+	idempotency, handled := claimZhiqiRequest(c, relayInfo)
+	if handled {
+		return
+	}
 	outcome, taskErr = executeTaskSubmission(c, relayInfo)
 	if taskErr != nil {
+		if idempotency != nil && !c.GetBool("zhiqi_submission_reserved") {
+			_ = model.ReleaseZhiqiIdempotency(context.WithoutCancel(c.Request.Context()), *idempotency)
+		}
 		respondTaskSubmissionError(c, taskErr)
 		return
 	}
@@ -614,7 +622,7 @@ func executeTaskSubmissionWith(
 	defer func() {
 		// The client of a relayed event stream already holds the vendor's
 		// work, so the submission is billed instead of refunded.
-		if !durable && relayInfo.Billing != nil && !c.Writer.Written() {
+		if !durable && !c.GetBool("zhiqi_submission_reserved") && relayInfo.Billing != nil && !c.Writer.Written() {
 			diagnostics.refund(stage)
 			relayInfo.Billing.Refund(c)
 		}
@@ -707,6 +715,13 @@ func executeTaskSubmissionWith(
 		c.Request.Body = io.NopCloser(bodyStorage)
 
 		stage = "submit"
+		if channel.GetSetting().TaskPluginKey == "zhiqi" {
+			// Once generation is about to be submitted, retain its result even
+			// if the caller closes the connection. Bound the independent work.
+			requestCtx, cancel := context.WithTimeout(context.WithoutCancel(c.Request.Context()), 60*time.Second)
+			defer cancel()
+			c.Request = c.Request.WithContext(requestCtx)
+		}
 		result, taskErr = submit(c, relayInfo)
 		if requestErr := c.Request.Context().Err(); requestErr != nil {
 			diagnostics.cancelled("after_submit", retryParam.GetRetry()+1)
@@ -715,6 +730,11 @@ func executeTaskSubmissionWith(
 		}
 		if taskErr == nil {
 			diagnostics.attemptSucceeded(retryParam.GetRetry()+1, result)
+			break
+		}
+		if channel.GetSetting().TaskPluginKey == "zhiqi" {
+			// All uncertain submissions return a durable task above; a known
+			// rejection also stays on this channel and is never auto-generated twice.
 			break
 		}
 
@@ -854,7 +874,16 @@ func executeTaskSubmissionWith(
 		}
 	}
 	diagnostics.insertStart(task)
-	if insertErr := task.InsertWithContext(c.Request.Context(), insertOmits...); insertErr != nil {
+	var insertErr error
+	if value, exists := c.Get("zhiqi_submit_intent"); exists && result.Platform == "zhiqi" {
+		intent := value.(*model.Task)
+		task.ID = intent.ID
+		task.CreatedAt = intent.CreatedAt
+		insertErr = model.DB.WithContext(context.WithoutCancel(c.Request.Context())).Save(task).Error
+	} else {
+		insertErr = task.InsertWithContext(c.Request.Context(), insertOmits...)
+	}
+	if insertErr != nil {
 		common.SysError(common.LogText("insert task error: %s", insertErr.Error()))
 		taskErr = service.TaskErrorWrapperLocal(errors.New("failed to persist task"), "task_insert_failed", http.StatusInternalServerError)
 		diagnostics.failed("insert", "database_error", taskErr, false)
@@ -892,6 +921,11 @@ func executeTaskSubmissionWith(
 		policy.AddEvent(service.PolicyEvent{Decision: service.PolicyDecision{Action: "stop", Reason: "task_failed", Source: "upstream"}})
 	}
 	service.LogTaskConsumption(c, relayInfo, task)
+	if result.Platform == "zhiqi" {
+		if err := model.ActivateZhiqiSubmission(context.WithoutCancel(c.Request.Context()), task.TaskID); err != nil {
+			return nil, service.TaskErrorWrapperLocal(err, "task_queue_activation_failed", http.StatusServiceUnavailable)
+		}
+	}
 	diagnostics.complete(task, result.Quota)
 
 	return &taskSubmissionOutcome{Result: result, Task: task, RelayInfo: relayInfo}, nil

@@ -1738,6 +1738,21 @@ func (a *TaskAdaptor) buildSubmit(c *gin.Context, info *relaycommon.RelayInfo) (
 		fetchContext = pluginruntime.WithFetcher(fetchContext, a.hookFetcher(info.ChannelBaseUrl, info.ChannelSetting.Proxy))
 	}
 	descriptor, err := a.requestDescriptor(fetchContext, "buildSubmitRequest", a.submitContext(c, info))
+	if err == nil && a.plugin.Meta.Key == "zhiqi" {
+		// The shared upstream merchant account is not a local ownership boundary.
+		// Resolve library references only after the executing channel is known.
+		if body, ok := descriptor.Body.(map[string]any); ok {
+			if references, present := body["library_assets"]; present {
+				var resolved map[string]any
+				resolved, err = service.ResolveZhiqiLibraryAssets(c.Request.Context(), info.UserId, info.ChannelId, references)
+				if err == nil {
+					body = maps.Clone(body)
+					body["library_assets"] = resolved
+					descriptor.Body = body
+				}
+			}
+		}
+	}
 	if err != nil {
 		reason := "hook_failed"
 		var invalid *pluginruntime.ResultError

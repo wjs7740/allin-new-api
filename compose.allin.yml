@@ -1,0 +1,25 @@
+name: allin-new-api
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: allin-new-api:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${ALLIN_PORT:-18463}:3000"
+    environment:
+      TZ: Asia/Shanghai
+      DEFAULT_LANGUAGE: zh-CN
+      SQLITE_PATH: /data/allin.db
+      TRUSTED_PROXIES: none
+      UPDATE_TASK: "true"
+    volumes:
+      - allin-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:3000/api/status"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  allin-data:

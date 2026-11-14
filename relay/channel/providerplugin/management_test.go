@@ -1,8 +1,11 @@
 package providerplugin
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"mime"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -10,15 +13,54 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/pkg/jsplugin"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	relayconstant "github.com/QuantumNous/new-api/relay/constant"
 	"github.com/QuantumNous/new-api/relaykit/dto"
 	"github.com/QuantumNous/new-api/relaykit/types"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestZhiqiSynchronousImagePreservesSpecificationAndMappedModel(t *testing.T) {
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/images/generations", strings.NewReader(`{"model":"alias","prompt":"fox","resolution":"2k","aspect_ratio":"4:3","stream":false,"n":2,"seed":0}`))
+	c.Request.Header.Set("Content-Type", "application/json")
+	info := &relaycommon.RelayInfo{ChannelMeta: &relaycommon.ChannelMeta{ChannelSetting: dto.ChannelSettings{TaskPluginKey: "zhiqi"}}}
+	adaptor := &Adaptor{}
+	converted, err := adaptor.ConvertImageRequest(c, info, dto.ImageRequest{Model: "real-image"})
+	require.NoError(t, err)
+	raw, err := common.Marshal(converted)
+	require.NoError(t, err)
+	assert.JSONEq(t, `{"model":"real-image","prompt":"fox","resolution":"2k","aspect_ratio":"4:3","stream":false,"n":2,"seed":0}`, string(raw))
+}
+
+func TestZhiqiImageEditingPreservesMultipleURLReferences(t *testing.T) {
+	var input bytes.Buffer
+	writer := multipart.NewWriter(&input)
+	for _, field := range [][2]string{{"model", "alias"}, {"prompt", "fox"}, {"image", "https://cdn.example/a.png"}, {"image", "https://cdn.example/b.png"}, {"resolution", "2k"}} {
+		require.NoError(t, writer.WriteField(field[0], field[1]))
+	}
+	require.NoError(t, writer.Close())
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request = httptest.NewRequest("POST", "/v1/images/edits", &input)
+	c.Request.Header.Set("Content-Type", writer.FormDataContentType())
+	info := &relaycommon.RelayInfo{ChannelMeta: &relaycommon.ChannelMeta{ChannelSetting: dto.ChannelSettings{TaskPluginKey: "zhiqi"}}}
+	adaptor := &Adaptor{}
+	converted, err := adaptor.ConvertImageRequest(c, info, dto.ImageRequest{Model: "mapped-image"})
+	require.NoError(t, err)
+	_, params, err := mime.ParseMediaType(c.Request.Header.Get("Content-Type"))
+	require.NoError(t, err)
+	form, err := multipart.NewReader(converted.(*bytes.Buffer), params["boundary"]).ReadForm(1 << 20)
+	require.NoError(t, err)
+	defer form.RemoveAll()
+	assert.Equal(t, []string{"mapped-image"}, form.Value["model"])
+	assert.Equal(t, []string{"https://cdn.example/a.png", "https://cdn.example/b.png"}, form.Value["image"])
+	assert.Equal(t, []string{"2k"}, form.Value["resolution"])
+}
 
 // pagedModelsPlugin exchanges its key for a numbered token, signs every
 // request with it and reads the vendor's model list page by page.
