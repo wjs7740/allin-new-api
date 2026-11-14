@@ -36,8 +36,12 @@
 
 所有生成请求均使用本地模拟上游，没有调用付费模型。实际 Zhiqi Key、Muse/MiniMax 型号、价格单位、图片 SSE 和云存储上传需配置后按供应商实际回包验收。
 
-媒体存储、官方素材处理由 Zhiqi API 承担，本地负责任务与素材权限、代理下载和计费。自建 S3 转存、完整文档 CMS 和自动按上游视频 Token 结算不属于当前已实现功能；设计文档保留其扩展方向。
+媒体存储、官方素材处理由 Zhiqi API 承担，本地负责任务与素材权限、代理下载和计费。自建 S3 转存和完整文档 CMS不属于当前已实现功能；设计文档保留其扩展方向。
 
 用户界面复用了 `SectionPageLayout`、`ConfirmDialog`、`CopyButton`、`EmptyState`、`LoadingState`、`DataTablePagination` 及已有基础控件。素材分页使用现有 TanStack 表格状态；文件上传使用现有 Input 的 file 类型。没有新增 UI 框架。
 
 测试数据库和预览位于独立容器及 `/tmp/allin-preview-data`。预览仅绑定回环地址；本地模拟 Key 不进入仓库。生产配置参考 `zhiqi-setup.md`，真实 Key 通过渠道后台输入。
+
+## 真实渠道部署补充（2026-11-14）
+
+使用用户提供的三组密钥读取了真实模型与价格目录，已按实际权限配置 Seedance、Muse、MiniMax H3 和 GPT Image 四条渠道。密钥、管理员口令和运行数据保存于服务器独立部署目录，不进入仓库。GPT 图片当前分组按同步接口配置。Seedance 两个 Token 型号已补上有界预估和实际 Token 结算，插件回归与运行实例 dry-run 均通过。实际付费生成尚未执行。

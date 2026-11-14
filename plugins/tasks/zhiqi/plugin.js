@@ -3,6 +3,7 @@
 const ZHIQI_CATALOG = { video: ["zhiqi-video", "seedance-2.0-fast-token", "seedance-2.0-mini-token"], image: ["zhiqi-image"] };
 
 const RESOLUTIONS = ["default", "480p", "512p", "720p", "768p", "1080p", "1k", "2k", "4k"];
+const TOKEN_MODELS = ["seedance-2.0-fast-token", "seedance-2.0-mini-token"];
 export const meta = {
   apiVersion: 1,
   key: "zhiqi",
@@ -24,6 +25,15 @@ export const meta = {
     image_count: { type: "number", unit: "count", description: { en: "Image generation unit price", zh: "图片生成单价" } },
     resolution: { enum: RESOLUTIONS, description: { en: "Output resolution", zh: "输出清晰度" } },
   },
+  usageProfiles: ZHIQI_CATALOG.video.filter(model => TOKEN_MODELS.includes(model)).map(model => ({
+    models: [model],
+    schema: {
+      tokens: { type: "number", unit: "token", description: { en: "Video token unit price", zh: "视频 Token 单价" } },
+      has_video: { type: "boolean", description: { en: "Reference video present", zh: "存在参考视频" } },
+      resolution: { enum: RESOLUTIONS, description: { en: "Output resolution", zh: "输出清晰度" } },
+    },
+    examples: [{ label: "720p · 6s", facts: { tokens: 120000, has_video: false, resolution: "720p" } }],
+  })),
   relay: [
     { incoming_path: "/v1/models", upstream_path: "/v1/models" },
     { incoming_path: "/v1/chat/completions", upstream_path: "/v1/chat/completions" },
@@ -151,6 +161,13 @@ export function parseSubmitResponse(_ctx, response) {
 
 export function extractUsage(ctx) {
   const body = normalize(ctx.requestBody, ctx.action, ctx.config);
+  if (TOKEN_MODELS.includes(ctx.upstreamModel || ctx.model)) {
+    // The upstream catalog estimates 20,000 tokens per requested second.
+    // normalize bounds aggregate seconds to 3600 before this multiplication.
+    const library = body.library_assets || {};
+    return { tokens: body.duration * body.n * 20000, resolution: body.resolution || "default",
+      has_video: !!((body.reference_video_urls || []).length || (library.videos || []).length) };
+  }
   return { requests: 1, seconds: ctx.action === "video" ? body.duration * body.n : 0,
     image_count: ctx.action === "image" ? body.n : 0, resolution: body.resolution || "default" };
 }
@@ -174,6 +191,13 @@ export function parseTaskResult(_ctx, body) {
 export function extractUsageOnComplete(task, _result, body) {
   const facts = {};
   if (!object(body)) return facts;
+  if (TOKEN_MODELS.includes(task.upstreamModel || task.model)) {
+    const tokens = object(body.usage) ? body.usage.total_tokens : undefined;
+    if (typeof tokens === "number" && Number.isSafeInteger(tokens) && tokens > 0 && tokens <= 2147483647) facts.tokens = tokens;
+    // Missing or invalid measured usage preserves the reserved estimate.
+    if (typeof body.resolution === "string" && RESOLUTIONS.includes(body.resolution.toLowerCase())) facts.resolution = body.resolution.toLowerCase();
+    return facts;
+  }
   if (task.action === "image") {
     const data = Array.isArray(body.data) ? body.data : object(body.data) ? [body.data] : [];
     const count = Math.max(data.filter(x => object(x) && typeof x.url === "string" && x.url.trim()).length,

@@ -71,6 +71,22 @@ func TestZhiqiContracts(t *testing.T) {
 		assert.Equal(t, float64(8), descriptor["body"].(map[string]any)["duration"])
 		assert.Equal(t, float64(8), call("extractUsage", ctx(decoded.RequestBody, "video"))["seconds"])
 	})
+	t.Run("Seedance token models reserve bounded tokens and settle reported usage", func(t *testing.T) {
+		driver := ctx(map[string]any{"model": "alias", "prompt": "fox", "duration": 6, "reference_video_urls": []any{"https://cdn.example/v.mp4"}}, "video")
+		driver["upstreamModel"] = "seedance-2.0-fast-token"
+		facts := call("extractUsage", driver)
+		assert.Equal(t, float64(120000), facts["tokens"])
+		assert.Equal(t, true, facts["has_video"])
+		for _, usage := range []any{-1, 1.5, "1200", 1e30, nil} {
+			facts = call("extractUsageOnComplete", driver, map[string]any{}, map[string]any{"usage": map[string]any{"total_tokens": usage}})
+			assert.NotContains(t, facts, "tokens")
+		}
+		facts = call("extractUsageOnComplete", driver, map[string]any{}, map[string]any{"usage": map[string]any{"total_tokens": 98765}})
+		assert.Equal(t, float64(98765), facts["tokens"])
+		driver["requestBody"] = map[string]any{"model": "alias", "prompt": "fox", "duration": 1e30}
+		_, err := plugin.Engine.Call(t.Context(), "extractUsage", driver)
+		require.Error(t, err)
+	})
 	for _, tc := range []struct {
 		name  string
 		extra map[string]any
