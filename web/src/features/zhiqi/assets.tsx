@@ -1,3 +1,5 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { getCoreRowModel, useReactTable } from '@tanstack/react-table'
 /*
 Copyright (C) 2023-2026 QuantumNous
 
@@ -16,8 +18,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import { nanoid } from 'nanoid'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -56,8 +57,8 @@ export function Assets() {
   const admin = useAuthStore(
     (state) => (state.auth.user?.role ?? 0) >= ROLE.ADMIN
   )
-  const groupRequest = useRef({ signature: '', key: crypto.randomUUID() })
-  const assetRequest = useRef({ signature: '', key: crypto.randomUUID() })
+  const groupRequest = useRef({ signature: '', key: nanoid(32) })
+  const assetRequest = useRef({ signature: '', key: nanoid(32) })
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 24 })
   const [groupPagination, setGroupPagination] = useState({
     pageIndex: 0,
@@ -125,7 +126,7 @@ export function Assets() {
     mutationFn: () => {
       const signature = JSON.stringify({ name: groupName, scope })
       if (groupRequest.current.signature !== signature) {
-        groupRequest.current = { signature, key: crypto.randomUUID() }
+        groupRequest.current = { signature, key: nanoid(32) }
       }
       return createAsset('groups', {
         name: groupName,
@@ -136,7 +137,7 @@ export function Assets() {
     onSuccess: (item) => {
       setGroup(item.id)
       setGroupName('')
-      groupRequest.current = { signature: '', key: crypto.randomUUID() }
+      groupRequest.current = { signature: '', key: nanoid(32) }
       reload()
     },
   })
@@ -152,7 +153,7 @@ export function Assets() {
           : null,
       })
       if (assetRequest.current.signature !== signature) {
-        assetRequest.current = { signature, key: crypto.randomUUID() }
+        assetRequest.current = { signature, key: nanoid(32) }
       }
       return file
         ? uploadAsset(group, name, kind, file, assetRequest.current.key)
@@ -165,7 +166,7 @@ export function Assets() {
           })
     },
     onSuccess: () => {
-      assetRequest.current = { signature: '', key: crypto.randomUUID() }
+      assetRequest.current = { signature: '', key: nanoid(32) }
       reload()
     },
     onSettled: reload,

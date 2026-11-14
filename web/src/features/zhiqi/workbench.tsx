@@ -1,3 +1,4 @@
+import { useMutation } from '@tanstack/react-query'
 /*
 Copyright (C) 2023-2026 QuantumNous
 
@@ -16,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useMutation } from '@tanstack/react-query'
+import { nanoid } from 'nanoid'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -62,7 +63,7 @@ export function Workbench() {
       }
       const signature = JSON.stringify({ mode, model, prompt, extra, key })
       if (idempotency.current.signature !== signature) {
-        idempotency.current = { signature, key: crypto.randomUUID() }
+        idempotency.current = { signature, key: nanoid(32) }
       }
       return request(
         {

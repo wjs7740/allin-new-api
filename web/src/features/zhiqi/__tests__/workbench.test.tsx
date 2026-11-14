@@ -60,8 +60,9 @@ describe('Media workbench', () => {
       ['Local API key', 'fixture'],
       ['Model', 'gpt-image-2.6'],
       ['Prompt', 'a blue cup'],
-    ])
-      {fireEvent.change(screen.getByLabelText(label), { target: { value } })}
+    ]) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } })
+    }
     fireEvent.click(
       screen.getByRole('button', { name: 'Create generation task' })
     )
@@ -71,6 +72,9 @@ describe('Media workbench', () => {
     await screen.findByText(/https:\/\/cdn\.example\/image\.png/)
   })
   it('requires a local key, model and prompt and queries the created task without resubmitting', async () => {
+    vi.spyOn(globalThis.crypto, 'randomUUID').mockImplementation(() => {
+      throw new Error('randomUUID unavailable on HTTP')
+    })
     const fetcher = vi
       .fn()
       .mockResolvedValueOnce(

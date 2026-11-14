@@ -25,6 +25,23 @@ import { api } from '@/lib/api'
 import { Assets } from '../assets'
 
 describe('Asset library', () => {
+  it('opens the asset library on HTTP origins without randomUUID', async () => {
+    vi.spyOn(globalThis.crypto, 'randomUUID').mockImplementation(() => {
+      throw new Error('randomUUID unavailable on HTTP')
+    })
+    vi.spyOn(api, 'get').mockResolvedValue({
+      data: { success: true, data: { total: 0, items: [] } },
+    })
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    render(
+      <QueryClientProvider client={client}>
+        <Assets />
+      </QueryClientProvider>
+    )
+    await screen.findByText('No materials yet')
+  })
   it('requires a writable ready group and preserves request identity after an uncertain create', async () => {
     vi.spyOn(api, 'get').mockImplementation(async (url) => ({
       data: {
@@ -103,14 +120,12 @@ describe('Asset library', () => {
   })
 
   it('paginates materials and resets the page when searching', async () => {
-    const reads = vi
-      .spyOn(api, 'get')
-      .mockImplementation(async (url) => ({
-        data: {
-          success: true,
-          data: { total: String(url).endsWith('/groups') ? 0 : 48, items: [] },
-        },
-      }))
+    const reads = vi.spyOn(api, 'get').mockImplementation(async (url) => ({
+      data: {
+        success: true,
+        data: { total: String(url).endsWith('/groups') ? 0 : 48, items: [] },
+      },
+    }))
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
