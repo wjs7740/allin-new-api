@@ -34,6 +34,42 @@ afterEach(() => {
 })
 
 describe('Media workbench', () => {
+  it('uses the synchronous image endpoint and hides task polling for synchronous-only models', async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ data: [{ url: 'https://cdn.example/image.png' }] }),
+          { status: 200 }
+        )
+      )
+    vi.stubGlobal('fetch', fetcher)
+    const client = new QueryClient({
+      defaultOptions: { mutations: { retry: false } },
+    })
+    render(
+      <QueryClientProvider client={client}>
+        <Workbench />
+      </QueryClientProvider>
+    )
+    fireEvent.change(screen.getByLabelText('Media type'), {
+      target: { value: 'image_sync' },
+    })
+    expect(screen.queryByLabelText('Task ID')).not.toBeInTheDocument()
+    for (const [label, value] of [
+      ['Local API key', 'fixture'],
+      ['Model', 'gpt-image-2.6'],
+      ['Prompt', 'a blue cup'],
+    ])
+      {fireEvent.change(screen.getByLabelText(label), { target: { value } })}
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Create generation task' })
+    )
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1))
+    expect(fetcher.mock.calls[0][0]).toBe('/v1/images/generations')
+    expect(fetcher.mock.calls[0][1].headers['Idempotency-Key']).toBeUndefined()
+    await screen.findByText(/https:\/\/cdn\.example\/image\.png/)
+  })
   it('requires a local key, model and prompt and queries the created task without resubmitting', async () => {
     const fetcher = vi
       .fn()

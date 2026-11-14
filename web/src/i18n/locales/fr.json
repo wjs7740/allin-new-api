@@ -7819,6 +7819,8 @@
     "Material visibility": "Material visibility",
     "New material group": "New material group",
     "Rename group": "Rename group",
-    "Search materials": "Search materials"
+    "Search materials": "Search materials",
+    "Synchronous image": "Synchronous image",
+    "Asynchronous image": "Asynchronous image"
   }
 }

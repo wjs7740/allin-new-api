@@ -65,9 +65,13 @@ export function Workbench() {
         idempotency.current = { signature, key: crypto.randomUUID() }
       }
       return request(
-        mode === 'video' ? '/v1/videos' : '/v1/images/generations/async',
+        {
+          video: '/v1/videos',
+          image: '/v1/images/generations/async',
+          image_sync: '/v1/images/generations',
+        }[mode] || '/v1/videos',
         { ...extra, model, prompt },
-        idempotency.current.key
+        mode === 'image_sync' ? undefined : idempotency.current.key
       )
     },
     onSuccess: (result) => {
@@ -136,7 +140,10 @@ export function Workbench() {
                 {t('Video')}
               </NativeSelectOption>
               <NativeSelectOption value='image'>
-                {t('Image')}
+                {t('Asynchronous image')}
+              </NativeSelectOption>
+              <NativeSelectOption value='image_sync'>
+                {t('Synchronous image')}
               </NativeSelectOption>
             </NativeSelect>
           </div>
@@ -176,21 +183,25 @@ export function Workbench() {
             'If submission times out, check Task Logs before creating another task.'
           )}
         </p>
-        <Label htmlFor='media-task'>{t('Task ID')}</Label>
-        <div className='flex gap-2'>
-          <Input
-            id='media-task'
-            value={taskId}
-            onChange={(event) => setTaskId(event.target.value)}
-          />
-          <Button
-            variant='outline'
-            disabled={!key.trim() || !taskId.trim() || query.isPending}
-            onClick={() => query.mutate()}
-          >
-            {t('Query task')}
-          </Button>
-        </div>
+        {mode !== 'image_sync' && (
+          <>
+            <Label htmlFor='media-task'>{t('Task ID')}</Label>
+            <div className='flex gap-2'>
+              <Input
+                id='media-task'
+                value={taskId}
+                onChange={(event) => setTaskId(event.target.value)}
+              />
+              <Button
+                variant='outline'
+                disabled={!key.trim() || !taskId.trim() || query.isPending}
+                onClick={() => query.mutate()}
+              >
+                {t('Query task')}
+              </Button>
+            </div>
+          </>
+        )}
         {output && (
           <div className='space-y-2'>
             {mode === 'video' && output.status === 'completed' && (

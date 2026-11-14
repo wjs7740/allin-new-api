@@ -7819,6 +7819,8 @@
     "Material visibility": "素材可见范围",
     "New material group": "新建素材分组",
     "Rename group": "重命名分组",
-    "Search materials": "搜索素材"
+    "Search materials": "搜索素材",
+    "Synchronous image": "同步图片",
+    "Asynchronous image": "异步图片"
   }
 }
