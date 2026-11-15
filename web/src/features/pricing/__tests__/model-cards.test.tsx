@@ -88,6 +88,75 @@ afterEach(() => {
 })
 
 describe('model cards', () => {
+  it('shows CNY specification prices from the active billing expression', () => {
+    useSystemConfigStore
+      .getState()
+      .setConfig({
+        currency: {
+          ...DEFAULT_CURRENCY_CONFIG,
+          quotaDisplayType: 'CNY',
+          usdExchangeRate: 6.8,
+        },
+      })
+    render(
+      <ModelCard
+        model={pricingModel({
+          model_name: 'gpt-image-2.6',
+          supported_endpoint_types: ['image-generation'],
+          billing_mode: 'tiered_expr',
+          billing_expr:
+            '(param("resolution") == "1k" ? tier("1K", fixed(0.005882352941)) : param("resolution") == "2k" ? tier("2K", fixed(0.010294117648)) : tier("4K", fixed(0.017647058824))) * image_count',
+        })}
+        onClick={vi.fn()}
+      />
+    )
+    const prices = screen.getByLabelText('Prices by specification')
+    expect(prices).toHaveTextContent('1K')
+    expect(prices).toHaveTextContent('2K')
+    expect(prices).toHaveTextContent('4K')
+    expect(prices).toHaveTextContent('¥0.04')
+    expect(prices).toHaveTextContent('¥0.07')
+    expect(prices).toHaveTextContent('¥0.12')
+    expect(prices).not.toHaveTextContent('$')
+    expect(within(prices).getAllByText('/ image')).toHaveLength(3)
+  })
+  it('shows video token prices per million without converting them into per-second charges', () => {
+    useSystemConfigStore
+      .getState()
+      .setConfig({
+        currency: {
+          ...DEFAULT_CURRENCY_CONFIG,
+          quotaDisplayType: 'CNY',
+          usdExchangeRate: 6.8,
+        },
+      })
+    const schema = {
+      tokens: {
+        type: 'number' as const,
+        unit: 'token' as const,
+        description: 'Video token unit price',
+      },
+      resolution: { enum: ['480p', '720p'] },
+    }
+    render(
+      <ModelCard
+        model={pricingModel({
+          model_name: 'seedance-2.0-mini-token',
+          supported_endpoint_types: ['openai-video'],
+          billing_mode: 'tiered_expr',
+          billing_expr:
+            'u("resolution") == "480p" ? tier("480p", u("tokens") * 1.688235294118 / 1000000) : tier("720p", u("tokens") * 1.970588235294 / 1000000)',
+          billing_usage_schema: schema,
+        })}
+        onClick={vi.fn()}
+      />
+    )
+    const prices = screen.getByLabelText('Prices by specification')
+    expect(prices).toHaveTextContent('¥11.48')
+    expect(prices).toHaveTextContent('¥13.4')
+    expect(within(prices).getAllByText('/ 1M token')).toHaveLength(2)
+    expect(within(prices).queryByText('/ s')).not.toBeInTheDocument()
+  })
   it('shows separate generic and image cache prices including a free image cache', () => {
     render(
       <CachedPriceCell

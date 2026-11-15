@@ -55,6 +55,33 @@ func TestLegacyDalleValidationAndPricesRemainCompatible(t *testing.T) {
 	}
 }
 
+func TestZhiqiImagePricingKeepsResolutionWithoutMediaPayload(t *testing.T) {
+	for _, multipartBody := range []bool{false, true} {
+		c, _ := gin.CreateTestContext(httptest.NewRecorder())
+		if multipartBody {
+			var buf bytes.Buffer
+			w := multipart.NewWriter(&buf)
+			for key, value := range map[string]string{"model": "gpt-image-2.6", "resolution": "2K", "prompt": "private prompt", "image": "https://example.com/private.png"} {
+				require.NoError(t, w.WriteField(key, value))
+			}
+			require.NoError(t, w.Close())
+			c.Request = httptest.NewRequest("POST", "/v1/images/edits", &buf)
+			c.Request.Header.Set("Content-Type", w.FormDataContentType())
+		} else {
+			c.Request = httptest.NewRequest("POST", "/v1/images/generations", bytes.NewBufferString(`{"model":"gpt-image-2.6","resolution":"2K","prompt":"private prompt"}`))
+			c.Request.Header.Set("Content-Type", "application/json")
+		}
+		t.Cleanup(func() { common.CleanupBodyStorage(c) })
+		info := &relaycommon.RelayInfo{Request: &dto.ImageRequest{Model: "gpt-image-2.6"}, ChannelMeta: &relaycommon.ChannelMeta{ChannelSetting: dto.ChannelSettings{TaskPluginKey: "zhiqi"}}}
+		input, err := ResolveImageBillingRequestInput(c, info, billingexpr.RequestInput{})
+		require.NoError(t, err)
+		var body map[string]any
+		require.NoError(t, common.Unmarshal(input.Body, &body))
+		assert.Equal(t, "2k", body["resolution"])
+		assert.NotContains(t, string(input.Body), "private")
+	}
+}
+
 // TestGetAndValidOpenAIImageRequestMultipartStream verifies multipart image
 // edit parsing: the stream field is parsed and validated, and the request body
 // stays replayable for the upstream request.

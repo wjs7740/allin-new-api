@@ -78,6 +78,7 @@ import {
   type DynamicPriceEntry,
 } from '../lib/dynamic-price'
 import { parseTags } from '../lib/filters'
+import { mediaPriceRows } from '../lib/media-price-rows'
 import { getAvailableGroups, isTokenBasedModel } from '../lib/model-helpers'
 import {
   withBasePricing,
@@ -105,6 +106,7 @@ import type {
   TokenUnit,
 } from '../types'
 import { DynamicPricingBreakdown } from './dynamic-pricing-breakdown'
+import { MediaPriceRows } from './media-price-rows'
 import { ModelBillingModeBadge } from './model-billing-mode-badge'
 import { ModelDetailsApi } from './model-details-api'
 import { ModelDetailsPerformance } from './model-details-performance'
@@ -1508,6 +1510,7 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
     baseModel.billing_expr,
     baseModel.billing_usage_schema
   )
+  const mediaRows = mediaPriceRows(props.model)
   const showBasePrices =
     !baseModel.billing_usage_schema ||
     simpleTaskPricing ||
@@ -1539,7 +1542,19 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
 
           <section className='bg-card/60 space-y-5 rounded-xl border p-4 shadow-sm'>
             <SectionTitle>{t('Pricing')}</SectionTitle>
-            {showBasePrices && (
+            {mediaRows.length > 0 && (
+              <MediaPriceRows
+                model={props.model}
+                options={{
+                  tokenUnit: props.tokenUnit,
+                  priceRate: props.priceRate,
+                  usdExchangeRate: props.usdExchangeRate,
+                  showRechargePrice,
+                  groupRatioMultiplier: 1,
+                }}
+              />
+            )}
+            {mediaRows.length === 0 && showBasePrices && (
               <PriceSection
                 model={baseModel}
                 priceRate={props.priceRate}
@@ -1548,7 +1563,7 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
                 showRechargePrice={showRechargePrice}
               />
             )}
-            {isDynamic && !simpleTaskPricing && (
+            {mediaRows.length === 0 && isDynamic && !simpleTaskPricing && (
               <DynamicPricingBreakdown
                 billingExpr={baseModel.billing_expr}
                 usageSchema={baseModel.billing_usage_schema}
@@ -1559,16 +1574,19 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
                 }}
               />
             )}
-            <GroupPricingSection
-              model={props.model}
-              groupRatio={props.groupRatio}
-              usableGroup={props.usableGroup}
-              autoGroups={props.autoGroups}
-              priceRate={props.priceRate}
-              usdExchangeRate={props.usdExchangeRate}
-              tokenUnit={props.tokenUnit}
-              showRechargePrice={showRechargePrice}
-            />
+            {(mediaRows.length === 0 ||
+              Object.keys(props.groupRatio).length > 1) && (
+              <GroupPricingSection
+                model={props.model}
+                groupRatio={props.groupRatio}
+                usableGroup={props.usableGroup}
+                autoGroups={props.autoGroups}
+                priceRate={props.priceRate}
+                usdExchangeRate={props.usdExchangeRate}
+                tokenUnit={props.tokenUnit}
+                showRechargePrice={showRechargePrice}
+              />
+            )}
           </section>
 
           <ModelBackendDetailsSection model={props.model} />

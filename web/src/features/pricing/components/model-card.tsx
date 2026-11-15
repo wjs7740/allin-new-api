@@ -37,11 +37,13 @@ import {
   isUnconfiguredTaskUsageModel,
 } from '../lib/dynamic-price'
 import { parseTags } from '../lib/filters'
+import { mediaPriceRows } from '../lib/media-price-rows'
 import { isTokenBasedModel } from '../lib/model-helpers'
 import { withBasePricing } from '../lib/plugin-pricing'
 import { formatPrice, formatRequestPrice } from '../lib/price'
 import { taskPriceLabel, taskUsageUnitLabel } from '../lib/task-price-display'
 import type { PricingModel, PriceType, TokenUnit } from '../types'
+import { MediaPriceRows } from './media-price-rows'
 import { ModelBillingModeBadge } from './model-billing-mode-badge'
 import { ModelPerfBadge, type ModelPerfBadgeData } from './model-perf-badge'
 
@@ -72,6 +74,14 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
   const modelIconKey = props.model.icon || props.model.vendor_icon
   const modelIcon = modelIconKey ? getLobeIcon(modelIconKey, 28) : null
   const initial = props.model.model_name?.charAt(0).toUpperCase() || '?'
+  const mediaType = endpoints.includes('openai-video') ? 'Video' : 'Image'
+  const isMedia =
+    endpoints.includes('openai-video') || endpoints.includes('image-generation')
+  let cover = '/model-covers/openai.jpg'
+  if (props.model.model_name.startsWith('seedance'))
+    {cover = '/model-covers/seedance.jpg'}
+  if (props.model.model_name === 'muse-video') cover = '/model-covers/muse.jpg'
+  if (props.model.model_name === 'H3') cover = '/model-covers/minimax.jpg'
   const isUnconfiguredTaskUsage = isUnconfiguredTaskUsageModel(model)
   const billingTime = useBillingTime(model.billing_expr)
   const currency = useSystemConfigStore((state) => state.config.currency)
@@ -110,7 +120,11 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
     [model, dynamicPriceOptions, currency]
   )
   let priceSummary: ReactNode
-  if (dynamicSummary) {
+  if (mediaPriceRows(props.model).length) {
+    priceSummary = (
+      <MediaPriceRows model={props.model} options={dynamicPriceOptions} />
+    )
+  } else if (dynamicSummary) {
     const cacheReadEntries = dynamicSummary.secondaryEntries.filter(
       (entry) => entry.field === 'cacheReadPrice' && entry.unit === 'token'
     )
@@ -270,8 +284,29 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
   }
 
   return (
-    <Card className='hover:ring-foreground/20 h-full min-w-0 gap-3 transition-colors'>
-      <CardHeader className='flex flex-row items-start gap-3'>
+    <Card className='hover:ring-primary/25 bg-background/90 h-full min-w-0 gap-3 overflow-hidden rounded-xl pt-0 shadow-sm transition-colors'>
+      {isMedia && (
+        <div className='relative h-36 overflow-hidden'>
+          <img
+            src={cover}
+            alt=''
+            loading='lazy'
+            className='h-full w-full object-cover'
+          />
+          <span className='bg-background/85 absolute top-3 right-3 rounded-full px-2.5 py-1 text-[11px] backdrop-blur-sm'>
+            {t(mediaType)}
+          </span>
+          <div
+            aria-hidden
+            className='bg-background/90 absolute top-4 left-4 flex size-10 items-center justify-center rounded-xl shadow-sm'
+          >
+            {modelIcon || initial}
+          </div>
+        </div>
+      )}
+      <CardHeader
+        className={cn('flex flex-row items-start gap-3', !isMedia && 'pt-4')}
+      >
         <div
           aria-hidden
           className='bg-muted/50 flex size-10 shrink-0 items-center justify-center rounded-lg'
@@ -307,7 +342,16 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
       </CardHeader>
       <CardContent className='flex flex-1 flex-col gap-3'>
         <div className='flex min-w-0 flex-col gap-1.5'>
-          <p className='text-muted-foreground line-clamp-2 text-[13px] leading-5 break-words'>
+          {isMedia && (
+            <span className='text-primary text-xs'>
+              {t(
+                mediaType === 'Video'
+                  ? 'Asynchronous generation'
+                  : 'Synchronous generation'
+              )}
+            </span>
+          )}
+          <p className='text-muted-foreground line-clamp-3 text-[13px] leading-5 break-words'>
             {props.model.description || t('No description available.')}
           </p>
           {tags.length > 0 && (

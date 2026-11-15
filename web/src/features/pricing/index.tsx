@@ -151,7 +151,7 @@ export function Pricing() {
   if (isLoading) {
     return (
       <PublicLayout showMainContainer={false}>
-        <div className='mx-auto w-full max-w-[1800px] px-3 pt-16 pb-8 sm:px-6 sm:pt-20 sm:pb-10 xl:px-8'>
+        <div className='mx-auto w-full max-w-[1800px] px-3 pt-20 pb-8 sm:px-6 sm:pt-24 sm:pb-10 xl:px-8'>
           <LoadingSkeleton viewMode={viewMode} />
         </div>
       </PublicLayout>
@@ -166,8 +166,8 @@ export function Pricing() {
           className='pointer-events-none absolute inset-x-0 top-0 h-[600px] opacity-20 dark:opacity-[0.10]'
           style={{
             background: [
-              'radial-gradient(ellipse 60% 50% at 20% 20%, oklch(0.72 0.18 250 / 80%) 0%, transparent 70%)',
-              'radial-gradient(ellipse 50% 40% at 80% 15%, oklch(0.65 0.15 200 / 60%) 0%, transparent 70%)',
+              'radial-gradient(ellipse 60% 50% at 10% 15%, #ddd2ff 0%, transparent 70%)',
+              'radial-gradient(ellipse 50% 40% at 90% 15%, #d2efff 0%, transparent 70%)',
               'radial-gradient(ellipse 40% 35% at 50% 70%, oklch(0.70 0.12 280 / 40%) 0%, transparent 70%)',
             ].join(', '),
             maskImage:
@@ -176,33 +176,22 @@ export function Pricing() {
               'linear-gradient(to bottom, black 40%, transparent 100%)',
           }}
         />
-        <PageTransition className='relative mx-auto w-full max-w-[1800px] px-3 pt-16 pb-8 sm:px-6 sm:pt-20 sm:pb-10 xl:px-8'>
-          <header className='mx-auto mb-5 max-w-3xl pt-5 text-center sm:mb-10 sm:pt-10'>
-            <h1 className='text-[clamp(2rem,5.5vw,3.5rem)] leading-[1.15] font-bold tracking-tight'>
-              {t('Model Square')}
-            </h1>
-            <p className='text-muted-foreground/80 mt-3 text-sm sm:mt-4 sm:text-base'>
-              {t('This site currently has {{count}} models enabled', {
-                count: models?.length || 0,
-              })}
-            </p>
-            <p className='text-muted-foreground/60 mx-auto mt-2 max-w-2xl text-xs leading-relaxed sm:text-sm'>
-              {t(
-                'Discover curated AI models, compare pricing and capabilities, and choose the right model for every scenario.'
-              )}
-            </p>
-            <SearchBar
-              value={searchInput}
-              onChange={setSearchInput}
-              onClear={clearSearch}
-              placeholder={t(
-                'Search model name, provider, endpoint, or tag...'
-              )}
-              className='mx-auto mt-4 max-w-2xl sm:mt-6'
-            />
+        <PageTransition className='relative mx-auto w-full max-w-[1800px] px-3 pt-20 pb-8 sm:px-6 sm:pt-24 sm:pb-10 xl:px-8'>
+          <header className='mb-5 flex flex-wrap items-end justify-between gap-3'>
+            <div>
+              <h1 className='text-xl font-semibold tracking-tight'>
+                {t('Model Square')}
+              </h1>
+              <p className='text-muted-foreground mt-1 text-sm'>
+                {t('Compare image and video models by specification')}
+              </p>
+            </div>
+            <span className='bg-background/80 rounded-full border px-3 py-1.5 text-xs'>
+              {t('Prices in Chinese yuan (CNY)')}
+            </span>
           </header>
 
-          <div className='grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]'>
+          <div className='grid gap-4 xl:grid-cols-[240px_minmax(0,1fr)]'>
             <PricingSidebar
               quotaTypeFilter={quotaTypeFilter}
               endpointTypeFilter={endpointTypeFilter}
@@ -225,6 +214,14 @@ export function Pricing() {
             />
 
             <main className='min-w-0 space-y-4'>
+              <SearchBar
+                value={searchInput}
+                onChange={setSearchInput}
+                onClear={clearSearch}
+                placeholder={t(
+                  'Search model name, provider, endpoint, or tag...'
+                )}
+              />
               <PricingToolbar
                 filteredCount={filteredModels.length}
                 totalCount={models?.length}

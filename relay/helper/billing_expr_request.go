@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"fmt"
 	"maps"
 	"strings"
 
@@ -62,6 +63,44 @@ func ResolveImageBillingRequestInput(c *gin.Context, info *relaycommon.RelayInfo
 		return input, err
 	}
 	body := map[string]any{"model": request.Model, "n": count, "size": request.Size, "quality": request.Quality}
+	if info.ChannelMeta != nil && info.ChannelSetting.TaskPluginKey == "zhiqi" && c != nil && c.Request != nil {
+		// These scalar fields drive the published image tiers. Keep reference
+		// images and prompts out of the frozen billing snapshot.
+		values := map[string]any{}
+		if strings.Contains(c.GetHeader("Content-Type"), "multipart/form-data") {
+			form, err := common.ParseMultipartFormReusable(c)
+			if err != nil {
+				return input, err
+			}
+			defer form.RemoveAll()
+			for _, field := range []string{"resolution", "output_format"} {
+				if v := form.Value[field]; len(v) > 1 {
+					return input, fmt.Errorf("%s must be supplied once", field)
+				} else if len(v) == 1 {
+					values[field] = v[0]
+				}
+			}
+		} else {
+			raw, err := readIncomingBillingExprBody(c)
+			if err != nil {
+				return input, err
+			}
+			if len(raw) > 0 {
+				if err = common.Unmarshal(raw, &values); err != nil {
+					return input, err
+				}
+			}
+		}
+		for _, field := range []string{"resolution", "output_format"} {
+			if v, exists := values[field]; exists && v != nil {
+				text, ok := v.(string)
+				if !ok || len(text) > 32 {
+					return input, fmt.Errorf("invalid %s", field)
+				}
+				body[field] = strings.ToLower(strings.TrimSpace(text))
+			}
+		}
+	}
 	if request.BillingParameters != nil {
 		body["parameters"] = request.BillingParameters
 	}

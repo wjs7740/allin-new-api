@@ -7821,6 +7821,12 @@
     "Rename group": "Rename group",
     "Search materials": "Search materials",
     "Synchronous image": "Synchronous image",
-    "Asynchronous image": "Asynchronous image"
+    "Asynchronous image": "Asynchronous image",
+    "Compare image and video models by specification": "Compare image and video models by specification",
+    "Prices in Chinese yuan (CNY)": "Prices in Chinese yuan (CNY)",
+    "Prices by specification": "Prices by specification",
+    "Asynchronous generation": "Asynchronous generation",
+    "Synchronous generation": "Synchronous generation",
+    "Unspecified resolution uses the highest listed tier": "Unspecified resolution uses the highest listed tier"
   }
 }

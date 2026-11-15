@@ -7821,6 +7821,12 @@
     "Rename group": "重命名分组",
     "Search materials": "搜索素材",
     "Synchronous image": "同步图片",
-    "Asynchronous image": "异步图片"
+    "Asynchronous image": "异步图片",
+    "Compare image and video models by specification": "按规格比较图片与视频模型",
+    "Prices in Chinese yuan (CNY)": "人民币计价 · CNY",
+    "Prices by specification": "规格价格",
+    "Asynchronous generation": "异步生成",
+    "Synchronous generation": "同步生成",
+    "Unspecified resolution uses the highest listed tier": "未指定清晰度时按最高档计费"
   }
 }
