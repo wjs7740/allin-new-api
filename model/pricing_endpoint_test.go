@@ -2,14 +2,61 @@ package model
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
+	"github.com/QuantumNous/new-api/pkg/jsplugin"
 	"github.com/QuantumNous/new-api/relaykit/dto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
+
+func TestPricingProviderPluginVideoDoesNotFallBackToChat(t *testing.T) {
+	t.Run("sqlite", testPricingProviderPluginVideo)
+	for _, entry := range []struct{ name, env string }{{"mysql", "ALLIN_TEST_MYSQL_DSN"}, {"postgres", "ALLIN_TEST_POSTGRES_DSN"}} {
+		if dsn := os.Getenv(entry.env); dsn != "" {
+			t.Run(entry.name, func(t *testing.T) {
+				var dialector gorm.Dialector = postgres.Open(dsn)
+				if entry.name == "mysql" {
+					dialector = mysql.Open(dsn)
+				}
+				db, err := gorm.Open(dialector, &gorm.Config{})
+				require.NoError(t, err)
+				previousDB, previousType := DB, common.MainDatabaseType()
+				DB = db
+				common.SetMainDatabaseType(common.DatabaseType(entry.name))
+				t.Cleanup(func() {
+					DB = previousDB
+					common.SetMainDatabaseType(previousType)
+					sqlDB, _ := db.DB()
+					_ = sqlDB.Close()
+				})
+				testPricingProviderPluginVideo(t)
+			})
+		}
+	}
+}
+
+func testPricingProviderPluginVideo(t *testing.T) {
+	resetPricingEndpointTestTables(t)
+	const source = `export const meta={apiVersion:1,key:"pricing-video",name:"Video",version:"1.0.0",author:{name:"Test"},models:["priced-video"],fetchMode:"per_task",protocols:["openai_video"],relay:[{incoming_path:"/v1/models",upstream_path:"/v1/models"},{incoming_path:"/v1/images/generations",upstream_path:"/v1/images/generations",models:["priced-image"]}]};export function buildSubmitRequest(){return {}};export function parseSubmitResponse(){return {taskId:"t"}};export function buildQueryRequest(){return {}};export function parseTaskResult(){return {status:"SUCCESS"}};export function listArtifacts(){return []};export function buildContentRequest(){return {}};export const protocols={openai_video:{decodeRequest(ctx){return {kind:"submit",model:ctx.model,requestBody:ctx.body.value}},render(ctx,task){return task.data}}};`
+	_, err := jsplugin.DefaultRegistry.Register(source, jsplugin.Options{})
+	require.NoError(t, err)
+	t.Cleanup(func() { jsplugin.DefaultRegistry.Unregister("pricing-video") })
+	channel := &Channel{Id: 911, Type: constant.ChannelTypeTaskPlugin, Status: common.ChannelStatusEnabled, Key: "fixture", Models: "priced-video,priced-image"}
+	channel.SetSetting(dto.ChannelSettings{TaskPluginKey: "pricing-video"})
+	require.NoError(t, DB.Create(channel).Error)
+	insertPricingEndpointAbility(t, 911, "priced-video")
+	insertPricingEndpointAbility(t, 911, "priced-image")
+	byModel := pricingEndpointTypesByModel(t)
+	assert.Equal(t, []constant.EndpointType{constant.EndpointTypeOpenAIVideo}, byModel["priced-video"])
+	assert.Equal(t, []constant.EndpointType{constant.EndpointTypeImageGeneration}, byModel["priced-image"])
+}
 
 func resetPricingEndpointTestTables(t *testing.T) {
 	t.Helper()

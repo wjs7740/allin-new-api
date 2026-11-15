@@ -137,6 +137,29 @@ func getPricingEndpointTypesForAbility(ability AbilityWithChannel, advancedCusto
 			return endpoints
 		}
 	}
+	if ability.ChannelType == constant.ChannelTypeTaskPlugin {
+		// Provider relay routes may omit a model served by the plugin's task
+		// protocol. Resolve those claims before the legacy chat fallback.
+		if channel, err := CacheGetChannel(ability.ChannelId); err == nil {
+			pluginKey := channel.GetSetting().TaskPluginKey
+			generation := jsplugin.DefaultRegistry.Generation()
+			var endpoints []constant.EndpointType
+			for _, endpoint := range []struct {
+				path string
+				kind constant.EndpointType
+			}{{"/v1/videos", constant.EndpointTypeOpenAIVideo}, {"/v1/responses", constant.EndpointTypeOpenAIResponse}, {"/v1/images/generations", constant.EndpointTypeImageGeneration}} {
+				for _, binding := range generation.LookupEndpointCandidates("POST", endpoint.path, ability.Model) {
+					if binding.Plugin.Meta.Key == pluginKey {
+						endpoints = append(endpoints, endpoint.kind)
+						break
+					}
+				}
+			}
+			if len(endpoints) > 0 {
+				return endpoints
+			}
+		}
+	}
 	return common.GetEndpointTypesByChannelType(ability.ChannelType, ability.Model)
 }
 

@@ -1131,6 +1131,31 @@ function ProviderGroupPricingSection(
     )
   }
 
+  if (mediaPriceRows(props.model).length > 0) {
+    return (
+      <section className='space-y-3'>
+        {!props.hideTitle && (
+          <SectionTitle>{t('Pricing by Group')}</SectionTitle>
+        )}
+        {availableGroups.map((group) => (
+          <div key={group} className='space-y-2 rounded-lg border p-3'>
+            <div className='text-sm font-medium'>{group}</div>
+            <MediaPriceRows
+              model={props.model}
+              options={{
+                tokenUnit: props.tokenUnit,
+                priceRate: props.priceRate,
+                usdExchangeRate: props.usdExchangeRate,
+                showRechargePrice,
+                groupRatioMultiplier: props.groupRatio[group] ?? 1,
+              }}
+            />
+          </div>
+        ))}
+      </section>
+    )
+  }
+
   const thClass = cn(
     'text-muted-foreground py-2 text-xs font-medium whitespace-normal break-words',
     !props.model.billing_usage_schema && 'tracking-wider uppercase'
