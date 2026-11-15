@@ -84,8 +84,8 @@
           "zh": "创建密钥"
         },
         "body": {
-          "en": "Sign in, open API tokens and create a token with a name, group, expiry and budget. Account creation is currently handled by the administrator.",
-          "zh": "登录控制台，进入 API 令牌，设置名称、分组、有效期和额度后创建。本站当前由管理员开通账号。"
+          "en": "Sign in, open API tokens and create a token with a name, group, expiry and budget. New users can create an account on the [registration page](/sign-up).",
+          "zh": "登录控制台，进入 API 令牌，设置名称、分组、有效期和额度后创建。新用户可以在[注册页面](/sign-up)自行创建账号。"
         },
         "code": "",
         "language": "bash"
