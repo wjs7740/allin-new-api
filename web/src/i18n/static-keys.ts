@@ -917,4 +917,17 @@ export const STATIC_I18N_KEYS = [
   'Channel priorities changed. Refresh and try again.',
   'Invalid channel priority move',
   'Channel priority is outside the sortable range',
+  // Public documentation groups and official pricing reference metadata.
+  'Start here',
+  'API reference',
+  'Model guides',
+  'SDKs and support',
+  'Low quality: 1K/2K square, 4K 3840×2160; output only',
+  'H3 768P output; channel parameter 720p',
+  'Online price per million tokens; reference-video tier shown separately',
+  'No input video: ¥23/M tokens; with video: ¥14/M tokens',
+  'Official example: 16:9, 5s output, 2–4s input video',
+  'Official example: 16:9, 5s, no input video; token billing',
+  'reference-video',
+  'text-or-image',
 ] as const

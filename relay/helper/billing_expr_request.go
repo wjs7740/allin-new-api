@@ -63,7 +63,16 @@ func ResolveImageBillingRequestInput(c *gin.Context, info *relaycommon.RelayInfo
 		return input, err
 	}
 	body := map[string]any{"model": request.Model, "n": count, "size": request.Size, "quality": request.Quality}
-	if info.ChannelMeta != nil && info.ChannelSetting.TaskPluginKey == "zhiqi" && c != nil && c.Request != nil {
+	// Initial pricing runs before ImageHelper initializes ChannelMeta. The
+	// distributor has already selected the channel in the request context.
+	pluginKey := ""
+	if c != nil {
+		pluginKey = c.GetString("task_plugin_key")
+	}
+	if pluginKey == "" && info.ChannelMeta != nil {
+		pluginKey = info.ChannelSetting.TaskPluginKey
+	}
+	if pluginKey == "zhiqi" && c != nil && c.Request != nil {
 		// These scalar fields drive the published image tiers. Keep reference
 		// images and prompts out of the frozen billing snapshot.
 		values := map[string]any{}

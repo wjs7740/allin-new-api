@@ -62,6 +62,32 @@ func TestZhiqiImageEditingPreservesMultipleURLReferences(t *testing.T) {
 	assert.Equal(t, []string{"2k"}, form.Value["resolution"])
 }
 
+func TestZhiqiImageEditingHonorsBufferedStreamOverride(t *testing.T) {
+	var input bytes.Buffer
+	writer := multipart.NewWriter(&input)
+	for _, field := range [][2]string{{"model", "gpt-image-2.6"}, {"prompt", "cup"}, {"image", "https://cdn.example/cup.png"}, {"stream", "true"}} {
+		require.NoError(t, writer.WriteField(field[0], field[1]))
+	}
+	require.NoError(t, writer.Close())
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/images/edits", &input)
+	c.Request.Header.Set("Content-Type", writer.FormDataContentType())
+	t.Cleanup(func() { common.CleanupBodyStorage(c) })
+	info := &relaycommon.RelayInfo{IsStream: true, ChannelMeta: &relaycommon.ChannelMeta{
+		ChannelSetting: dto.ChannelSettings{TaskPluginKey: "zhiqi"}, ParamOverride: map[string]any{"stream": false},
+	}}
+	converted, err := (&Adaptor{}).ConvertImageRequest(c, info, dto.ImageRequest{Model: "gpt-image-2.6"})
+	require.NoError(t, err)
+	_, params, err := mime.ParseMediaType(c.Request.Header.Get("Content-Type"))
+	require.NoError(t, err)
+	form, err := multipart.NewReader(converted.(*bytes.Buffer), params["boundary"]).ReadForm(1 << 20)
+	require.NoError(t, err)
+	defer form.RemoveAll()
+	assert.Equal(t, []string{"false"}, form.Value["stream"])
+	assert.Equal(t, []string{"https://cdn.example/cup.png"}, form.Value["image"])
+	assert.True(t, info.IsStream, "client must still receive the completion as SSE")
+}
+
 // pagedModelsPlugin exchanges its key for a numbered token, signs every
 // request with it and reads the vendor's model list page by page.
 const pagedModelsPlugin = `

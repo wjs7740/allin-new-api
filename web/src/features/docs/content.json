@@ -1,0 +1,611 @@
+[
+  {
+    "slug": "quickstart",
+    "group": "Start here",
+    "title": {
+      "en": "Quickstart",
+      "zh": "快速开始"
+    },
+    "description": {
+      "en": "One API key for image and video generation.",
+      "zh": "使用一个 API Key，接入图片与视频生成。"
+    },
+    "sections": [
+      {
+        "id": "connect",
+        "title": {
+          "en": "Connect to the API",
+          "zh": "连接 API"
+        },
+        "body": {
+          "en": "Create a key in [API tokens](/console/token). Use your site key in the Authorization header. An SDK base URL ends in `/v1`; raw HTTP examples below use the site origin.",
+          "zh": "在[API 令牌](/console/token)中创建本站密钥。请求头使用 Bearer 鉴权。SDK 的 Base URL 以 `/v1` 结尾；以下 curl 示例中的 BASE_URL 是站点地址。"
+        },
+        "code": "export BASE_URL=\"{{origin}}\"\nexport API_KEY=\"YOUR_API_KEY\"",
+        "language": "bash"
+      },
+      {
+        "id": "models",
+        "title": {
+          "en": "Check available models",
+          "zh": "查询可用模型"
+        },
+        "body": {
+          "en": "The live list reflects the permissions of your key. Select an exact model ID from the response.",
+          "zh": "模型列表反映当前密钥的实际权限，请使用返回的完整模型 ID。"
+        },
+        "code": "curl \"$BASE_URL/v1/models\" \\\n  -H \"Authorization: Bearer $API_KEY\"",
+        "language": "bash"
+      },
+      {
+        "id": "workflow",
+        "title": {
+          "en": "Choose your workflow",
+          "zh": "选择生成方式"
+        },
+        "body": {
+          "en": "Images return their output in the same request. Videos return a task ID: poll it until `completed`, then download the media. Try the [media workbench](/media) before integrating.",
+          "zh": "图片接口在同一次请求中返回结果；视频接口先返回任务 ID，轮询至 `completed` 后下载成品。也可以先在[媒体工作台](/media)体验。"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "next",
+        "title": {
+          "en": "Next steps",
+          "zh": "接下来"
+        },
+        "body": {
+          "en": "Read [image generation](/docs/images), [video generation](/docs/videos), or [Python SDK](/docs/python). Prices are listed in the [model square](/pricing).",
+          "zh": "继续阅读[图片生成](/docs/images)、[视频生成](/docs/videos)或 [Python SDK](/docs/python)。实时售价见[模型广场](/pricing)。"
+        },
+        "code": "",
+        "language": "bash"
+      }
+    ]
+  },
+  {
+    "slug": "keys",
+    "group": "Start here",
+    "title": {
+      "en": "Accounts and keys",
+      "zh": "账号与密钥"
+    },
+    "description": {
+      "en": "Manage credentials, budgets and model access.",
+      "zh": "管理调用凭证、余额与模型权限。"
+    },
+    "sections": [
+      {
+        "id": "create",
+        "title": {
+          "en": "Create a key",
+          "zh": "创建密钥"
+        },
+        "body": {
+          "en": "Sign in, open API tokens and create a token with a name, group, expiry and budget. Account creation is currently handled by the administrator.",
+          "zh": "登录控制台，进入 API 令牌，设置名称、分组、有效期和额度后创建。本站当前由管理员开通账号。"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "auth",
+        "title": {
+          "en": "Authentication",
+          "zh": "鉴权方式"
+        },
+        "body": {
+          "en": "Send `Authorization: Bearer YOUR_API_KEY` on every API request. Store the key on your server or in an environment variable. Use a site key, not your browser session token.",
+          "zh": "每次调用携带 `Authorization: Bearer YOUR_API_KEY`。将密钥保存在服务端或环境变量中，调用时使用本站 API Key。"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "limits",
+        "title": {
+          "en": "Limits and balance",
+          "zh": "额度与权限"
+        },
+        "body": {
+          "en": "A key may have a narrower model list than the account. Check the key budget, account balance, group and model restrictions when requests fail. Revoke and replace a leaked key in the console.",
+          "zh": "令牌可以限制模型和额度。调用异常时检查令牌额度、账户余额、分组和模型权限；密钥泄露后在控制台撤销并重新生成。"
+        },
+        "code": "",
+        "language": "bash"
+      }
+    ]
+  },
+  {
+    "slug": "models",
+    "group": "API reference",
+    "title": {
+      "en": "Available models",
+      "zh": "可用模型"
+    },
+    "description": {
+      "en": "Use exact IDs and the matching API endpoint.",
+      "zh": "选择准确型号和对应的接口。"
+    },
+    "sections": [
+      {
+        "id": "catalog",
+        "title": {
+          "en": "Model catalog",
+          "zh": "模型目录"
+        },
+        "body": {
+          "en": "The deployment includes GPT Image 2 / 2.5 / 2.6, Seedance 2.0 / 2.5, Muse Video and H3. `GET /v1/models` is the source of truth for your key.",
+          "zh": "当前接入 GPT Image 2 / 2.5 / 2.6、Seedance 2.0 / 2.5、Muse Video 和 H3。具体可用范围以 `GET /v1/models` 为准。"
+        },
+        "code": "curl \"$BASE_URL/v1/models\" \\\n  -H \"Authorization: Bearer $API_KEY\"",
+        "language": "bash"
+      },
+      {
+        "id": "image-models",
+        "title": {
+          "en": "Image model IDs",
+          "zh": "图片型号"
+        },
+        "body": {
+          "en": "`gpt-image-2`, `gpt-image-2.5`, `gpt-image-2.5-flare`, `gpt-image-2.5-sunburst`, `gpt-image-2.6`, `gpt-image-2.6-flare`, `gpt-image-2.6-sunburst`. Use `/v1/images/generations` or `/v1/images/edits`.",
+          "zh": "`gpt-image-2`、`gpt-image-2.5`、`gpt-image-2.5-flare`、`gpt-image-2.5-sunburst`、`gpt-image-2.6`、`gpt-image-2.6-flare`、`gpt-image-2.6-sunburst`。对应 `/v1/images/generations` 和 `/v1/images/edits`。"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "video-models",
+        "title": {
+          "en": "Video model IDs",
+          "zh": "视频型号"
+        },
+        "body": {
+          "en": "`seedance-2.0`, `seedance-2.0-fast`, `seedance-2.0-mini`, `seedance-2.0-fast-token`, `seedance-2.0-mini-token`, `seedance-2.5`, `seedance-2.5-ref`, `muse-video`, `H3`. Use `/v1/videos`; spelling and case matter.",
+          "zh": "`seedance-2.0`、`seedance-2.0-fast`、`seedance-2.0-mini`、`seedance-2.0-fast-token`、`seedance-2.0-mini-token`、`seedance-2.5`、`seedance-2.5-ref`、`muse-video`、`H3`。统一使用 `/v1/videos`，名称区分大小写。"
+        },
+        "code": "",
+        "language": "bash"
+      }
+    ]
+  },
+  {
+    "slug": "images",
+    "group": "API reference",
+    "title": {
+      "en": "Image generation",
+      "zh": "图片生成"
+    },
+    "description": {
+      "en": "Generate an image with an OpenAI-compatible request.",
+      "zh": "通过 OpenAI 兼容接口生成图片。"
+    },
+    "sections": [
+      {
+        "id": "request",
+        "title": {
+          "en": "Create an image",
+          "zh": "创建图片"
+        },
+        "body": {
+          "en": "Send a JSON request. Keep the connection open until the image payload arrives; generation can take several minutes.",
+          "zh": "发送 JSON 请求，并保持连接等待图片结果；复杂生成可能耗时数分钟。"
+        },
+        "code": "curl \"$BASE_URL/v1/images/generations\" \\\n  -H \"Authorization: Bearer $API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"model\":\"gpt-image-2.6\",\"prompt\":\"一只蓝色陶瓷杯，白色桌面，柔和自然光\",\"n\":1,\"resolution\":\"1k\",\"aspect_ratio\":\"1:1\",\"response_format\":\"url\"}'",
+        "language": "bash"
+      },
+      {
+        "id": "parameters",
+        "title": {
+          "en": "Parameters",
+          "zh": "参数说明"
+        },
+        "body": {
+          "en": "| Parameter | Meaning |\n| --- | --- |\n| model | Exact image model ID |\n| prompt | Image description |\n| n | Image count; start with 1 |\n| resolution | `1k`, `2k`, `4k`; specify explicitly |\n| aspect_ratio | For example `1:1` or `16:9` |\n| response_format | `url` for the current channels |\n| output_format | `png`, `jpeg`, `webp`; additional formats depend on model |",
+          "zh": "| 参数 | 说明 |\n| --- | --- |\n| model | 完整图片型号 |\n| prompt | 画面描述 |\n| n | 图片数量，建议从 1 开始 |\n| resolution | `1k`、`2k`、`4k`，建议明确传入 |\n| aspect_ratio | 例如 `1:1`、`16:9` |\n| response_format | 当前渠道使用 `url` |\n| output_format | `png`、`jpeg`、`webp`，扩展格式按型号支持 |"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "response",
+        "title": {
+          "en": "Read the response",
+          "zh": "读取结果"
+        },
+        "body": {
+          "en": "Save data[].url promptly; temporary URLs may expire. Use n=1 with the current channels. If a multiple-image request returns one image, billing follows the valid output count. These GPT image channels use synchronous generation; asynchronous image tasks are not enabled for these keys.",
+          "zh": "及时保存 `data[].url` 指向的文件，临时链接可能过期。当前渠道建议 n=1；请求多张但实际返回一张时，按有效返回张数结算。当前 GPT 图片渠道使用同步生成，本组密钥未启用异步图片任务接口。"
+        },
+        "code": "{\"created\":1794751956,\"data\":[{\"url\":\"https://MEDIA_HOST/result.png\"}]}",
+        "language": "json"
+      },
+      {
+        "id": "stream",
+        "title": {
+          "en": "SSE completion events",
+          "zh": "SSE 完成事件"
+        },
+        "body": {
+          "en": "Set stream=true to receive the completed image as an SSE event followed by [DONE]. The current channel generates synchronously upstream, so this mode has no partial image previews. Keep the request open until completion. GIF uses the regular JSON response.",
+          "zh": "设置 stream=true，可在生成完成后收到图片 SSE 事件和 [DONE]。当前渠道在上游同步生成，此模式没有逐步图片预览；请保持连接直至完成。GIF 使用普通 JSON 响应。"
+        },
+        "code": "",
+        "language": "bash"
+      }
+    ]
+  },
+  {
+    "slug": "image-edits",
+    "group": "API reference",
+    "title": {
+      "en": "Image editing",
+      "zh": "图片编辑"
+    },
+    "description": {
+      "en": "Transform a reference image using a prompt.",
+      "zh": "提供参考图，用提示词修改画面。"
+    },
+    "sections": [
+      {
+        "id": "edit",
+        "title": {
+          "en": "Edit an image",
+          "zh": "编辑图片"
+        },
+        "body": {
+          "en": "The current channel accepts HTTP(S) reference image URLs in multipart fields. Publish or upload your image to a readable URL before calling this endpoint. Binary file upload is not supported by this channel.",
+          "zh": "当前渠道通过 multipart 字段接收 HTTP(S) 参考图 URL。调用前将图片上传到可读取的 URL；本渠道编辑接口仅接收 URL 字段。"
+        },
+        "code": "curl \"$BASE_URL/v1/images/edits\" \\\n  -H \"Authorization: Bearer $API_KEY\" \\\n  -F \"model=gpt-image-2.6\" \\\n  -F \"prompt=Change the cup to green; preserve the composition\" \\\n  -F \"image=https://MEDIA_HOST/cup.png\" \\\n  -F \"n=1\" -F \"resolution=1k\" -F \"response_format=url\"",
+        "language": "bash"
+      },
+      {
+        "id": "references",
+        "title": {
+          "en": "Reference images",
+          "zh": "参考图片"
+        },
+        "body": {
+          "en": "Pass one or more image URL fields using image or image[]. For reliable downloads, use a public URL without login requirements. The response has the same data array as image generation.",
+          "zh": "通过 image 或 image[] 字段传入参考图 URL；链接应可公开读取且无需登录。返回结果与图片生成相同，图片位于 data 数组中。"
+        },
+        "code": "",
+        "language": "bash"
+      }
+    ]
+  },
+  {
+    "slug": "videos",
+    "group": "API reference",
+    "title": {
+      "en": "Video generation",
+      "zh": "视频生成"
+    },
+    "description": {
+      "en": "Submit, poll and download an asynchronous video task.",
+      "zh": "提交任务、轮询状态、下载视频。"
+    },
+    "sections": [
+      {
+        "id": "submit",
+        "title": {
+          "en": "Submit a task",
+          "zh": "提交任务"
+        },
+        "body": {
+          "en": "Keep the returned local task ID. Use a stable, unique Idempotency-Key for each logical job; reusing it with an identical request returns the same task.",
+          "zh": "保存返回的本站任务 ID。每个业务任务使用独立且稳定的 Idempotency-Key，相同键和相同请求返回同一任务。"
+        },
+        "code": "curl \"$BASE_URL/v1/videos\" \\\n  -H \"Authorization: Bearer $API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Idempotency-Key: YOUR_UNIQUE_JOB_ID\" \\\n  -d '{\"model\":\"seedance-2.0-mini\",\"prompt\":\"A blue ceramic cup on a white table, slow camera movement\",\"duration\":5,\"resolution\":\"480p\",\"aspect_ratio\":\"16:9\"}'",
+        "language": "bash"
+      },
+      {
+        "id": "poll",
+        "title": {
+          "en": "Poll the task",
+          "zh": "查询任务"
+        },
+        "body": {
+          "en": "Poll every 5–10 seconds. The standard endpoint uses `queued`, `in_progress`, `completed` and `failed`. A 200 response at submission means accepted, not finished.",
+          "zh": "建议每 5–10 秒查询一次。标准接口状态为 `queued`、`in_progress`、`completed`、`failed`。提交成功只表示已受理，视频完成后才会出现结果。"
+        },
+        "code": "curl \"$BASE_URL/v1/videos/TASK_ID\" \\\n  -H \"Authorization: Bearer $API_KEY\"",
+        "language": "bash"
+      },
+      {
+        "id": "download",
+        "title": {
+          "en": "Download the result",
+          "zh": "下载成品"
+        },
+        "body": {
+          "en": "When completed, download `data[].url` promptly. The content endpoint also supports an authenticated download. Do not submit another generation just because a download fails.",
+          "zh": "任务完成后及时下载 `data[].url`。也可通过带鉴权的 content 接口下载。下载异常时先检查原任务和原链接。"
+        },
+        "code": "curl -L \"$BASE_URL/v1/videos/TASK_ID/content\" \\\n  -H \"Authorization: Bearer $API_KEY\" -o video.mp4",
+        "language": "bash"
+      },
+      {
+        "id": "native",
+        "title": {
+          "en": "Native compatibility",
+          "zh": "兼容接口"
+        },
+        "body": {
+          "en": "The `/zhiqi/v1/videos` path also accepts submissions and task queries. Its success state is `succeeded`; the standard `/v1/videos` success state is `completed`.",
+          "zh": "`/zhiqi/v1/videos` 同样支持提交和查询。该兼容接口的成功状态是 `succeeded`，标准 `/v1/videos` 使用 `completed`。"
+        },
+        "code": "",
+        "language": "bash"
+      }
+    ]
+  },
+  {
+    "slug": "video-models",
+    "group": "Model guides",
+    "title": {
+      "en": "Video parameters",
+      "zh": "视频模型参数"
+    },
+    "description": {
+      "en": "Choose a model, resolution and reference mode.",
+      "zh": "按型号选择分辨率、时长和参考方式。"
+    },
+    "sections": [
+      {
+        "id": "specs",
+        "title": {
+          "en": "Recommended starting settings",
+          "zh": "建议起步配置"
+        },
+        "body": {
+          "en": "| Model family | Resolution | Duration |\n| --- | --- | --- |\n| Seedance 2.0 / fast / mini / token | 480p or 720p | 5 s |\n| Seedance 2.5 / 2.5-ref | 480p, 720p, 1080p | 5 s |\n| Muse Video | 720p | 4 s |\n| H3 | 720p channel parameter | 4 s |\n\nThese are starting settings, not a promise of every upstream combination.",
+          "zh": "| 模型系列 | 分辨率 | 时长 |\n| --- | --- | --- |\n| Seedance 2.0 / fast / mini / token | 480p、720p | 5 秒 |\n| Seedance 2.5 / 2.5-ref | 480p、720p、1080p | 5 秒 |\n| Muse Video | 720p | 4 秒 |\n| H3 | 渠道参数 720p | 4 秒 |\n\n以上为起步参数，具体组合按型号支持情况执行。"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "reference",
+        "title": {
+          "en": "Add references",
+          "zh": "添加参考素材"
+        },
+        "body": {
+          "en": "Use publicly readable HTTP(S) URLs. Depending on the model, supply `input_reference`, `reference_image_urls`, `reference_video_urls`, `reference_audio_urls`, or first/last frame URLs. Reference-video token prices differ from text-to-video prices.",
+          "zh": "参考素材使用上游可读取的 HTTP(S) URL。按型号支持情况传入 `input_reference`、`reference_image_urls`、`reference_video_urls`、`reference_audio_urls`，或首尾帧 URL。带参考视频的 token 档位与纯文生视频分开定价。"
+        },
+        "code": "{\"model\":\"seedance-2.0-mini\",\"prompt\":\"The camera moves slowly around the cup\",\"duration\":5,\"resolution\":\"480p\",\"aspect_ratio\":\"16:9\",\"input_reference\":\"https://MEDIA_HOST/cup.png\"}",
+        "language": "json"
+      },
+      {
+        "id": "tokens",
+        "title": {
+          "en": "Token-priced models",
+          "zh": "按 token 计价型号"
+        },
+        "body": {
+          "en": "Models ending in `-token` reserve an estimate when submitted and settle on valid upstream token usage when completed. If usage is missing, the reservation remains. Check the final usage log rather than estimating cost from duration alone.",
+          "zh": "`-token` 型号提交时预扣估算费用，完成后按上游有效 token 用量结算差额。若上游未提供有效用量，保留预扣。请以消费日志中的最终金额为准。"
+        },
+        "code": "",
+        "language": "bash"
+      }
+    ]
+  },
+  {
+    "slug": "assets",
+    "group": "Model guides",
+    "title": {
+      "en": "Asset library",
+      "zh": "素材库"
+    },
+    "description": {
+      "en": "Reuse private or shared references across tasks.",
+      "zh": "复用个人素材和公共参考素材。"
+    },
+    "sections": [
+      {
+        "id": "library",
+        "title": {
+          "en": "Manage assets",
+          "zh": "管理素材"
+        },
+        "body": {
+          "en": "Open the asset library in the media workbench. Create a private group, upload or register a URL, and wait for the asset to become ready. Public groups are managed by administrators. Asset access is checked against the current user.",
+          "zh": "进入媒体工作台的素材库，创建私有分组，上传文件或导入 URL，等待素材就绪。公共素材由管理员维护，访问时按本站用户权限校验。"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "api",
+        "title": {
+          "en": "Asset endpoints",
+          "zh": "素材接口"
+        },
+        "body": {
+          "en": "| Operation | Endpoint |\n| --- | --- |\n| List/create groups | GET / POST `/api/aigc-assets/groups` |\n| List/create assets | GET / POST `/api/aigc-assets/assets` |\n| Read/update/delete | GET / PUT / DELETE `/api/aigc-assets/assets/{id}` |\n| Preview | GET `/api/aigc-assets/assets/{id}/preview` |\n| Begin upload | POST `/api/aigc-assets/uploads` |\n| Complete upload | POST `/api/aigc-assets/uploads/{id}/complete` |\n\nThese endpoints use your site API key.",
+          "zh": "| 操作 | 接口 |\n| --- | --- |\n| 查询 / 新建分组 | GET / POST `/api/aigc-assets/groups` |\n| 查询 / 新建素材 | GET / POST `/api/aigc-assets/assets` |\n| 详情 / 更新 / 删除 | GET / PUT / DELETE `/api/aigc-assets/assets/{id}` |\n| 预览 | GET `/api/aigc-assets/assets/{id}/preview` |\n| 申请上传 | POST `/api/aigc-assets/uploads` |\n| 确认上传完成 | POST `/api/aigc-assets/uploads/{id}/complete` |\n\n这些接口使用本站 API Key。"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "use",
+        "title": {
+          "en": "Use an asset in a task",
+          "zh": "在视频任务中使用"
+        },
+        "body": {
+          "en": "Use the local asset ID returned by the library. Assets must be ready, accessible to your user, and compatible with the selected generation channel.",
+          "zh": "使用素材库返回的本站素材 ID。素材须已就绪、当前用户有权访问，且与生成渠道兼容。"
+        },
+        "code": "{\"model\":\"seedance-2.0-mini\",\"prompt\":\"The character waves\",\"duration\":5,\"resolution\":\"480p\",\"library_assets\":{\"images\":[\"aia_LOCAL_ASSET_ID\"]}}",
+        "language": "json"
+      }
+    ]
+  },
+  {
+    "slug": "python",
+    "group": "SDKs and support",
+    "title": {
+      "en": "Python SDK",
+      "zh": "Python 接入"
+    },
+    "description": {
+      "en": "Copy a working image request or a complete video polling loop.",
+      "zh": "复制图片调用示例，或完整的视频轮询流程。"
+    },
+    "sections": [
+      {
+        "id": "image-sdk",
+        "title": {
+          "en": "OpenAI image client",
+          "zh": "OpenAI 图片客户端"
+        },
+        "body": {
+          "en": "Install `openai` and set `API_KEY` in the environment. Pass gateway-specific fields in `extra_body`.",
+          "zh": "安装 `openai`，设置环境变量 API_KEY。渠道扩展参数放入 `extra_body`。"
+        },
+        "code": "import os\nfrom openai import OpenAI\n\nclient = OpenAI(api_key=os.environ[\"API_KEY\"],\n                base_url=\"{{origin}}/v1\", timeout=300, max_retries=0)\nresult = client.images.generate(\n    model=\"gpt-image-2.6\", prompt=\"A blue ceramic cup\", n=1,\n    extra_body={\"resolution\":\"1k\", \"aspect_ratio\":\"1:1\",\n                \"response_format\":\"url\"})\nprint(result.data[0].url)",
+        "language": "python"
+      },
+      {
+        "id": "video-sdk",
+        "title": {
+          "en": "Video polling loop",
+          "zh": "视频轮询示例"
+        },
+        "body": {
+          "en": "Install `requests`. Save the task ID and reuse it if polling is interrupted. The timeout below stops polling only; it does not cancel the generation.",
+          "zh": "安装 `requests`。保存任务 ID，查询中断后继续查询原任务。下面的超时只结束客户端轮询，视频生成仍继续执行。"
+        },
+        "code": "import os, time, uuid, requests\nbase = \"{{origin}}\"\nheaders = {\"Authorization\": \"Bearer \" + os.environ[\"API_KEY\"]}\nr = requests.post(base + \"/v1/videos\", headers={**headers,\n    \"Idempotency-Key\": str(uuid.uuid4())}, json={\n    \"model\":\"seedance-2.0-mini\", \"prompt\":\"A blue ceramic cup\",\n    \"duration\":5, \"resolution\":\"480p\", \"aspect_ratio\":\"16:9\"}, timeout=60)\nr.raise_for_status()\ntask_id = r.json()[\"id\"]\nprint(\"Task:\", task_id)\nfor _ in range(180):\n    r = requests.get(base + \"/v1/videos/\" + task_id, headers=headers, timeout=30)\n    r.raise_for_status()\n    task = r.json()\n    if task[\"status\"] == \"completed\":\n        print(task[\"data\"][0][\"url\"])\n        break\n    if task[\"status\"] == \"failed\":\n        raise RuntimeError(task.get(\"error\", task))\n    time.sleep(10)\nelse:\n    print(\"Still pending; resume polling:\", task_id)",
+        "language": "python"
+      }
+    ]
+  },
+  {
+    "slug": "pricing",
+    "group": "SDKs and support",
+    "title": {
+      "en": "Billing and official prices",
+      "zh": "计费与官方比价"
+    },
+    "description": {
+      "en": "Understand RMB prices, reservations and comparison rules.",
+      "zh": "了解人民币售价、预扣结算和官方折扣口径。"
+    },
+    "sections": [
+      {
+        "id": "billing",
+        "title": {
+          "en": "How billing works",
+          "zh": "如何计费"
+        },
+        "body": {
+          "en": "The [model square](/pricing) displays live prices in CNY. Images are priced per image and resolution; most videos per second; `-token` videos per million tokens. The site conversion is ¥6.8 per USD. Your group multiplier is included in the displayed price.",
+          "zh": "[模型广场](/pricing)展示实时人民币售价。图片按张及分辨率计费，多数视频按秒计费，`-token` 视频按百万 token 计费。本站换算比例为 1 USD = ¥6.8，展示价格包含所选分组倍率。"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "official",
+        "title": {
+          "en": "Official price comparisons",
+          "zh": "官方价格比较"
+        },
+        "body": {
+          "en": "References were checked on 2026-11-15. Token rates are compared directly. Seedance per-second references use the official 16:9, 5-second, no-input-video example. GPT references use 1K/2K square images and 4K 3840×2160 at low quality and exclude input tokens. H3 uses a 768P reference while the channel accepts a 720p parameter. These benchmarks do not establish identical output quality or pricing for every input. Muse and GIF do not have a verified matching reference.",
+          "zh": "官方价格核对日期为 2026-11-15。token 单价直接比较；Seedance 按秒参考采用官方 16:9、5 秒、无输入视频示例；GPT 参考采用 1K/2K 方图、4K 3840×2160、low 质量的输出价格，不含输入 token；H3 参考为官方 768P，而渠道参数为 720p。参考价格用于指定场景比较，不代表所有输入场景或成品质量完全一致。Muse 和 GIF 暂无核实的同规格参考价。"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "sources",
+        "title": {
+          "en": "Official sources",
+          "zh": "官方来源"
+        },
+        "body": {
+          "en": "[Volcengine Ark pricing](https://docs.volcengine.com/docs/ark/model-pricing?lang=zh) · [OpenAI image calculator](https://developers.openai.com/api/docs/guides/image-generation#calculating-costs) · [MiniMax pricing](https://platform.minimax.io/docs/pricing/overview) · [Meta API pricing](https://dev.meta.ai/docs/pricing-rate-limits)",
+          "zh": "[火山方舟定价](https://docs.volcengine.com/docs/ark/model-pricing?lang=zh) · [OpenAI 图片计算器](https://developers.openai.com/api/docs/guides/image-generation#calculating-costs) · [MiniMax 官方定价](https://platform.minimax.io/docs/pricing/overview) · [Meta API 定价](https://dev.meta.ai/docs/pricing-rate-limits)"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "settlement",
+        "title": {
+          "en": "Reservations and failures",
+          "zh": "预扣与失败处理"
+        },
+        "body": {
+          "en": "Videos reserve funds when accepted, then reconcile on completion. Confirmed generation failures follow the refund flow. Timeouts, unknown submission results and storage errors require checking the original task; they are not proof of a free failed generation.",
+          "zh": "视频受理时预扣，完成时核对用量并结算差额。明确的生成失败进入退款流程；超时、提交结果待确认和存储错误需要核查原任务，避免重复生成和重复扣费。"
+        },
+        "code": "",
+        "language": "bash"
+      }
+    ]
+  },
+  {
+    "slug": "errors",
+    "group": "SDKs and support",
+    "title": {
+      "en": "Errors and troubleshooting",
+      "zh": "错误与排查"
+    },
+    "description": {
+      "en": "Find the cause without creating duplicate jobs.",
+      "zh": "定位异常，避免重复创建生成任务。"
+    },
+    "sections": [
+      {
+        "id": "status-codes",
+        "title": {
+          "en": "HTTP status codes",
+          "zh": "HTTP 状态码"
+        },
+        "body": {
+          "en": "| Status | Action |\n| --- | --- |\n| 400 | Check model, prompt, size and duration |\n| 401 | Check the site API key and expiry |\n| 403 | Check model, group or asset permissions |\n| 409 | Check the idempotency key and request body; follow Retry-After |\n| 429 | Check concurrency and rate limits |\n| 5xx | Save the request ID and inspect the original task |",
+          "zh": "| 状态码 | 排查方向 |\n| --- | --- |\n| 400 | 检查模型、提示词、尺寸、时长 |\n| 401 | 检查本站密钥与有效期 |\n| 403 | 检查模型、分组或素材权限 |\n| 409 | 检查幂等键和请求体，按 Retry-After 等待 |\n| 429 | 检查并发和频率限制 |\n| 5xx | 保存请求 ID，核查原任务 |"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "pending",
+        "title": {
+          "en": "A task is still pending",
+          "zh": "任务长时间处理中"
+        },
+        "body": {
+          "en": "Continue querying the same task ID. If submission has an uncertain result, contact the administrator with the local task ID. Do not change the idempotency key to force a duplicate submission.",
+          "zh": "继续查询同一个任务 ID。提交状态待确认时，将本站任务 ID 提交管理员核查。保留原幂等键，避免重复创建任务。"
+        },
+        "code": "",
+        "language": "bash"
+      },
+      {
+        "id": "delivery",
+        "title": {
+          "en": "Download or playback issues",
+          "zh": "下载或播放异常"
+        },
+        "body": {
+          "en": "Try downloading the completed task through its content endpoint. Keep the model, task ID, request time and error message for support; omit API keys.",
+          "zh": "尝试通过任务的 content 接口下载已完成视频。反馈问题时提供模型、任务 ID、请求时间和报错信息，省略密钥。"
+        },
+        "code": "",
+        "language": "bash"
+      }
+    ]
+  }
+]

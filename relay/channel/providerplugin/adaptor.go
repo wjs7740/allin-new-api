@@ -117,6 +117,12 @@ func (a *Adaptor) ConvertImageRequest(c *gin.Context, info *relaycommon.RelayInf
 				return nil, fmt.Errorf("%s must be provided once", name)
 			}
 			for _, value := range values {
+				// Match the existing JSON stream override for URL-form edits.
+				// Keep info.IsStream so the shared image handler can emit the
+				// completed JSON payload as SSE for synchronous-only channels.
+				if name == "stream" && info.ParamOverride["stream"] == false {
+					value = "false"
+				}
 				if isImage || name == "mask" {
 					parsed, parseErr := url.Parse(value)
 					if parseErr != nil || parsed.Host == "" || parsed.User != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") {

@@ -72,13 +72,20 @@ func TestZhiqiImagePricingKeepsResolutionWithoutMediaPayload(t *testing.T) {
 			c.Request.Header.Set("Content-Type", "application/json")
 		}
 		t.Cleanup(func() { common.CleanupBodyStorage(c) })
-		info := &relaycommon.RelayInfo{Request: &dto.ImageRequest{Model: "gpt-image-2.6"}, ChannelMeta: &relaycommon.ChannelMeta{ChannelSetting: dto.ChannelSettings{TaskPluginKey: "zhiqi"}}}
+		// Exercise initial pre-consume: channel selection has populated the
+		// context, but ImageHelper has not initialized ChannelMeta yet.
+		c.Set("task_plugin_key", "zhiqi")
+		info := &relaycommon.RelayInfo{Request: &dto.ImageRequest{Model: "gpt-image-2.6"}}
 		input, err := ResolveImageBillingRequestInput(c, info, billingexpr.RequestInput{})
 		require.NoError(t, err)
 		var body map[string]any
 		require.NoError(t, common.Unmarshal(input.Body, &body))
 		assert.Equal(t, "2k", body["resolution"])
 		assert.NotContains(t, string(input.Body), "private")
+		cost, trace, err := billingexpr.RunExprWithRequest(`(param("resolution") == "2k" ? tier("2K", fixed(0.01)) : tier("4K", fixed(0.02))) * image_count`, billingexpr.TokenParams{}, input)
+		require.NoError(t, err)
+		assert.Equal(t, "2K", trace.MatchedTier)
+		assert.Equal(t, float64(10000), cost)
 	}
 }
 
