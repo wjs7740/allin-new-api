@@ -327,19 +327,6 @@
         },
         "code": "curl -L \"$BASE_URL/v1/videos/TASK_ID/content\" \\\n  -H \"Authorization: Bearer $API_KEY\" -o video.mp4",
         "language": "bash"
-      },
-      {
-        "id": "native",
-        "title": {
-          "en": "Native compatibility",
-          "zh": "兼容接口"
-        },
-        "body": {
-          "en": "The `/zhiqi/v1/videos` path also accepts submissions and task queries. Its success state is `succeeded`; the standard `/v1/videos` success state is `completed`.",
-          "zh": "`/zhiqi/v1/videos` 同样支持提交和查询。该兼容接口的成功状态是 `succeeded`，标准 `/v1/videos` 使用 `completed`。"
-        },
-        "code": "",
-        "language": "bash"
       }
     ]
   },
