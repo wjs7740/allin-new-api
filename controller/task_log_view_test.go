@@ -85,6 +85,13 @@ func TestTaskLogDTODoesNotInventHistoricalPluginProvenance(t *testing.T) {
 	assert.Nil(t, adminView.RootInfo)
 }
 
+func TestMediaTaskLogHidesInternalPlatformForUsers(t *testing.T) {
+	task := &model.Task{TaskID: "task_media", Platform: "zhiqi"}
+	assert.Equal(t, "media", tasksToDto([]*model.Task{task}, false, common.RoleCommonUser)[0].Platform)
+	assert.Equal(t, "zhiqi", tasksToDto([]*model.Task{task}, false, common.RoleAdminUser)[0].Platform)
+	assert.Equal(t, constant.TaskPlatform("zhiqi"), task.Platform)
+}
+
 func TestTaskLogDTOReplacesLegacyVideoURLWithAvailabilityFlag(t *testing.T) {
 	task := &model.Task{
 		TaskID:     "task_legacy_video",

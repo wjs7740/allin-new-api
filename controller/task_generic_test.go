@@ -91,6 +91,20 @@ func TestGetTaskDoesNotProjectArtifacts(t *testing.T) {
 	assert.NotContains(t, recorder.Body.String(), "upstream.invalid")
 }
 
+func TestGetTaskUsesPublicMediaPlatform(t *testing.T) {
+	task := setupGenericTaskTest(t)
+	task.Platform = "zhiqi"
+	require.NoError(t, model.DB.Save(task).Error)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Set("id", task.UserId)
+	c.Params = gin.Params{{Key: "key", Value: task.TaskID}}
+	c.Request = httptest.NewRequest(http.MethodGet, "/v1/tasks/"+task.TaskID, nil)
+	GetTask(c)
+	assert.Contains(t, recorder.Body.String(), `"platform":"media"`)
+	assert.NotContains(t, recorder.Body.String(), "zhiqi")
+}
+
 func TestGetTaskArtifactsReturnsEmptyForLegacyTask(t *testing.T) {
 	task := setupGenericTaskTest(t)
 	recorder := httptest.NewRecorder()

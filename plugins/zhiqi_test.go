@@ -55,6 +55,25 @@ func TestZhiqiContracts(t *testing.T) {
 		facts := call("extractUsage", ctx(body, "video"))
 		assert.Equal(t, float64(8), facts["seconds"])
 	})
+	for _, tc := range []struct{ size, resolution, ratio string }{
+		{"1280x720", "720p", "16:9"}, {"720x1280", "720p", "9:16"},
+		{"1920x1080", "1080p", "16:9"}, {"854x480", "480p", "16:9"},
+		{"720p", "720p", ""}, {"16:9", "", "16:9"},
+	} {
+		t.Run("video size "+tc.size+" normalizes submission and billing together", func(t *testing.T) {
+			body := map[string]any{"model": "seedance-2.0-fast", "prompt": "cup", "seconds": "5", "size": tc.size}
+			driver := ctx(body, "video")
+			req := call("buildSubmitRequest", driver)["body"].(map[string]any)
+			assert.NotContains(t, req, "size")
+			if tc.resolution != "" {
+				assert.Equal(t, tc.resolution, req["resolution"])
+				assert.Equal(t, tc.resolution, call("extractUsage", driver)["resolution"])
+			}
+			if tc.ratio != "" {
+				assert.Equal(t, tc.ratio, req["aspect_ratio"])
+			}
+		})
+	}
 	t.Run("channel default determines both sent duration and reservation", func(t *testing.T) {
 		body := map[string]any{"model": "zhiqi-video", "prompt": "a fox"}
 		intent, decodeErr := plugin.Engine.CallPath(t.Context(), "protocols", []string{"openai_video", "decodeRequest"},
@@ -102,6 +121,11 @@ func TestZhiqiContracts(t *testing.T) {
 		{"unrecognized field", map[string]any{"callback_url": "https://example.com/callback"}},
 		{"inline input", map[string]any{"input_reference": "data:image/png;base64,AAAA"}},
 		{"boolean quantity", map[string]any{"duration": true}},
+		{"unknown pixel size", map[string]any{"size": "1234x567"}},
+		{"object property as size", map[string]any{"size": "__proto__"}},
+		{"size resolution conflict", map[string]any{"size": "1280x720", "resolution": "480p"}},
+		{"size ratio conflict", map[string]any{"size": "1280x720", "aspect_ratio": "9:16"}},
+		{"metadata size resolution conflict", map[string]any{"size": "1280x720", "metadata": map[string]any{"resolution": "480p"}}},
 	} {
 		t.Run("rejects "+tc.name+" before reservation", func(t *testing.T) {
 			body := map[string]any{"model": "zhiqi-video", "prompt": "fox"}

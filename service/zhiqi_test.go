@@ -125,7 +125,7 @@ func TestZhiqiDurableQueueSendsOnceAndRetainsUncertainCharges(t *testing.T) {
 		}
 		if body["prompt"] == "rejected" {
 			w.WriteHeader(400)
-			_, _ = w.Write([]byte(`{"error":{"code":"invalid"}}`))
+			_, _ = w.Write([]byte(`{"code":"unsupported_parameter","message":"private-provider request-id secret"}`))
 			return
 		}
 		_, _ = w.Write([]byte(`{"id":"upstream-queue-task","object":"video.task","status":"queued","model":"queue-video"}`))
@@ -162,6 +162,8 @@ func TestZhiqiDurableQueueSendsOnceAndRetainsUncertainCharges(t *testing.T) {
 	assert.Equal(t, 100, uncertain.Quota)
 	assert.Equal(t, model.TaskStatus(model.TaskStatusUnknown), uncertain.Status)
 	assert.Zero(t, rejected.Quota)
+	assert.Equal(t, "Unsupported model parameters; check resolution, aspect_ratio, duration and reference limits", rejected.FailReason)
+	assert.NotContains(t, string(rejected.Data), "private-provider")
 	var user model.User
 	require.NoError(t, model.DB.First(&user, 834).Error)
 	assert.Equal(t, 800, user.Quota)

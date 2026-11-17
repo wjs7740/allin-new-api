@@ -39,7 +39,7 @@ func GetZhiqiPricing(c *gin.Context) {
 			continue
 		}
 		price.EnableGroup = slices.DeleteFunc(slices.Clone(price.EnableGroup), func(group string) bool { return !slices.Contains(groups.ownerGroups, group) })
-		prices = append(prices, price)
+		prices = append(prices, publicMediaPricing(price))
 	}
 	groupRatios := map[string]float64{}
 	for _, group := range groups.ownerGroups {
@@ -49,7 +49,7 @@ func GetZhiqiPricing(c *gin.Context) {
 		}
 		groupRatios[group] = ratio
 	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "data": prices, "vendors": model.GetVendors(), "group_ratio": groupRatios, "supported_endpoint": model.GetSupportedEndpointMap(), "pricing_version": "allin-zhiqi-v1"})
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": prices, "vendors": model.GetVendors(), "group_ratio": groupRatios, "supported_endpoint": model.GetSupportedEndpointMap(), "pricing_version": "allin-media-v1"})
 }
 
 func GetZhiqiConfiguration(c *gin.Context) {

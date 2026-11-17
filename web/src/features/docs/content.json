@@ -296,8 +296,8 @@
           "zh": "提交任务"
         },
         "body": {
-          "en": "Keep the returned local task ID. Use a stable, unique Idempotency-Key for each logical job; reusing it with an identical request returns the same task.",
-          "zh": "保存返回的本站任务 ID。每个业务任务使用独立且稳定的 Idempotency-Key，相同键和相同请求返回同一任务。"
+          "en": "Keep the returned local task ID. Use a stable, unique Idempotency-Key for each logical job; reusing it with an identical request returns the same task. This is the local task ID; acceptance does not mean the upstream has accepted generation. Standard size values such as 1280x720 map to resolution=720p and aspect_ratio=16:9. Conflicting specifications are rejected before submission.",
+          "zh": "保存返回的本站任务 ID。每个业务任务使用独立且稳定的 Idempotency-Key，相同键和相同请求返回同一任务。 返回的是本站任务 ID；任务受理不代表上游已接受生成。标准 size（如 1280x720）会转换为 resolution=720p、aspect_ratio=16:9，尺寸与显式规格冲突时直接返回参数错误。"
         },
         "code": "curl \"$BASE_URL/v1/videos\" \\\n  -H \"Authorization: Bearer $API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Idempotency-Key: YOUR_UNIQUE_JOB_ID\" \\\n  -d '{\"model\":\"seedance-2.0-mini\",\"prompt\":\"A blue ceramic cup on a white table, slow camera movement\",\"duration\":5,\"resolution\":\"480p\",\"aspect_ratio\":\"16:9\"}'",
         "language": "bash"

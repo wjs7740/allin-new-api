@@ -102,6 +102,29 @@ function normalize(body, action, config) {
       delete req[alias];
     }
   }
+  if (action === "video" && req.size !== undefined) {
+    if (typeof req.size !== "string") throw new Error("size must be a resolution, aspect ratio, or supported pixel dimensions");
+    const size = req.size.trim().toLowerCase();
+    const dimensions = {
+      "854x480": ["480p", "16:9"], "864x496": ["480p", "16:9"],
+      "480x854": ["480p", "9:16"], "496x864": ["480p", "9:16"],
+      "640x480": ["480p", "4:3"], "480x640": ["480p", "3:4"], "480x480": ["480p", "1:1"],
+      "1280x720": ["720p", "16:9"], "720x1280": ["720p", "9:16"],
+      "960x720": ["720p", "4:3"], "720x960": ["720p", "3:4"], "720x720": ["720p", "1:1"],
+      "1920x1080": ["1080p", "16:9"], "1080x1920": ["1080p", "9:16"],
+      "1440x1080": ["1080p", "4:3"], "1080x1440": ["1080p", "3:4"], "1080x1080": ["1080p", "1:1"],
+    };
+    let spec = dimensions[size];
+    if (RESOLUTIONS.slice(1).includes(size)) spec = [size, ""];
+    if (["16:9", "9:16", "1:1", "4:3", "3:4", "21:9", "9:21"].includes(size)) spec = ["", size];
+    if (!Array.isArray(spec)) throw new Error("unsupported video size; use resolution (480p, 720p, 1080p) and aspect_ratio");
+    for (const [index, field] of ["resolution", "aspect_ratio"].entries()) {
+      if (!spec[index]) continue;
+      if (req[field] !== undefined && (typeof req[field] !== "string" || req[field].trim().toLowerCase() !== spec[index])) throw new Error("size conflicts with " + field);
+      req[field] = spec[index];
+    }
+    delete req.size;
+  }
   const shared = ["model", "prompt", "n", "size", "resolution", "aspect_ratio", "reference_image_urls"];
   const fields = action === "video" ? shared.concat([
     "duration", "input_reference", "reference_video_urls", "reference_audio_urls", "first_frame_image_url", "last_frame_image_url",

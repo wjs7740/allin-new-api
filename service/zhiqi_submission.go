@@ -58,12 +58,18 @@ func processZhiqiSubmission(ctx context.Context, job model.ZhiqiSubmission) {
 	}
 	response, status, err := ZhiqiRequest(operationCtx, channel, http.MethodPost, path, body)
 	if err != nil {
+		// Keep operational diagnostics out of customer responses. Never log
+		// upstream text, which can contain credentials or submitted content.
+		logger.LogWarn(operationCtx, "Media submission failed task=%s channel=%d http_status=%d", task.TaskID, task.ChannelId, status)
 		if status >= 400 && status < 500 && status != 408 && status != 429 {
 			from := task.Status
 			task.Status = model.TaskStatusFailure
 			task.Progress = "100%"
 			task.FinishTime = time.Now().Unix()
 			task.FailReason = "Upstream rejected the generation request"
+			if status == http.StatusBadRequest && response["code"] == "unsupported_parameter" {
+				task.FailReason = "Unsupported model parameters; check resolution, aspect_ratio, duration and reference limits"
+			}
 			task.SetData(map[string]any{"object": task.Action + ".task", "status": "failed", "error": map[string]any{"code": "generation_rejected", "message": task.FailReason}})
 			if won, saveErr := task.UpdateWithStatus(from); saveErr == nil && won {
 				RefundTaskQuota(operationCtx, &task, task.FailReason)

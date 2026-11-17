@@ -2,6 +2,7 @@ package controller
 
 import (
 	"maps"
+	"slices"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
@@ -10,6 +11,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// Public catalogs describe the retail service without exposing its routing
+// provider. Clone the slice so administrator pricing metadata remains intact.
+func publicMediaPricing(price model.Pricing) model.Pricing {
+	price.BillingPluginVariants = slices.Clone(price.BillingPluginVariants)
+	for i := range price.BillingPluginVariants {
+		variant := &price.BillingPluginVariants[i]
+		if variant.PluginKey == "zhiqi" {
+			variant.PluginKey = "media"
+			variant.PluginName = "Allin Media"
+			variant.Icon = "text:AI"
+		}
+	}
+	return price
+}
 
 func filterPricingByUsableGroups(pricing []model.Pricing, usableGroup map[string]string) []model.Pricing {
 	if len(pricing) == 0 {
@@ -21,6 +37,7 @@ func filterPricingByUsableGroups(pricing []model.Pricing, usableGroup map[string
 
 	filtered := make([]model.Pricing, 0, len(pricing))
 	for _, item := range pricing {
+		item = publicMediaPricing(item)
 		if common.StringsContains(item.EnableGroup, "all") {
 			filtered = append(filtered, item)
 			continue

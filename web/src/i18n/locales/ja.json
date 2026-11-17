@@ -7852,6 +7852,7 @@
     "Official example: 16:9, 5s output, 2–4s input video": "Official example: 16:9, 5s output, 2–4s input video",
     "Official example: 16:9, 5s, no input video; token billing": "Official example: 16:9, 5s, no input video; token billing",
     "reference-video": "reference-video",
-    "text-or-image": "text-or-image"
+    "text-or-image": "text-or-image",
+    "Unsupported model parameters; check resolution, aspect_ratio, duration and reference limits": "Unsupported model parameters; check resolution, aspect_ratio, duration and reference limits"
   }
 }

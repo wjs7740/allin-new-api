@@ -46,7 +46,7 @@ export function mediaPriceRows(
     })
   }
   const variant = model.billing_plugin_variants?.find(
-    (item) => item.plugin_key === 'zhiqi'
+    (item) => item.plugin_key === 'media' || item.plugin_key === 'zhiqi'
   )
   const selected = variant ? withPluginPricing(model, variant) : model
   if (

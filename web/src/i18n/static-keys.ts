@@ -930,4 +930,5 @@ export const STATIC_I18N_KEYS = [
   'Official example: 16:9, 5s, no input video; token billing',
   'reference-video',
   'text-or-image',
+  'Unsupported model parameters; check resolution, aspect_ratio, duration and reference limits',
 ] as const

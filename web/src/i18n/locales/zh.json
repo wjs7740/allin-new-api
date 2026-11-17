@@ -7852,6 +7852,7 @@
     "Official example: 16:9, 5s output, 2–4s input video": "参考：16:9 · 输出 5 秒 · 输入视频 2–4 秒",
     "Official example: 16:9, 5s, no input video; token billing": "参考：16:9 · 5 秒 · 无参考视频 · 官方按 token",
     "reference-video": "带参考视频",
-    "text-or-image": "无参考视频"
+    "text-or-image": "无参考视频",
+    "Unsupported model parameters; check resolution, aspect_ratio, duration and reference limits": "模型参数不受支持，请检查清晰度、画面比例、时长和参考素材限制"
   }
 }
